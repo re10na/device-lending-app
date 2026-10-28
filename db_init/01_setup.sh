@@ -4,7 +4,8 @@
 set -euo pipefail
 
 run_sql() {
-    mysql --protocol=socket -uroot -p"$MYSQL_ROOT_PASSWORD" "$@"
+    # 文字コードを指定しないと日本語（社員名・コメント）が latin1 として読み込まれて文字化けする
+    mysql --protocol=socket --default-character-set=utf8mb4 -uroot -p"$MYSQL_ROOT_PASSWORD" "$@"
 }
 
 run_sql < /sql/seed/master.sql

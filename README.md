@@ -5,6 +5,25 @@
 
 > 社名・社員・機器のデータはすべて架空のものに置き換えています。
 
+![管理者ダッシュボード](docs/screenshots/dashboard.png)
+
+## 画面
+
+| 機器一覧 | 機器の詳細 |
+|---|---|
+| ![機器一覧](docs/screenshots/devices.png) | ![機器の詳細](docs/screenshots/device-detail.png) |
+| **人物一覧** | **申請（管理者）** |
+| ![人物一覧](docs/screenshots/members.png) | ![申請](docs/screenshots/requests.png) |
+| **利用者画面** | **ログイン** |
+| ![利用者画面](docs/screenshots/user.png) | ![ログイン](docs/screenshots/login.png) |
+
+スマホにも対応しています。
+
+<p>
+  <img src="docs/screenshots/mobile-dashboard.png" alt="スマホのダッシュボード" width="260">
+  <img src="docs/screenshots/mobile-user.png" alt="スマホの利用者画面" width="260">
+</p>
+
 ## 担当範囲
 
 管理者ページのダッシュボードのデザインはペアが担当し、それ以外（DB 設計、バックエンド、
