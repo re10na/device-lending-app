@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+{% endblock %}
+
+{% block content %}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>処理済みの申請</h1>
+          <p class="page-description">全 {{ processed_total }} 件。誤って処理した申請は申請中に戻せます</p>
+        </div>
+      </section>
+
+      <section class="inventory-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>処理済み</h2>
+            {% if processed %}
+            <p>新しい順に {{ first_number }}〜{{ first_number + processed|length - 1 }} 件目（全 {{ processed_total }} 件）</p>
+            {% endif %}
+          </div>
+          <a class="small-button link-button" href="{{ url_for('requests.index') }}">申請の画面へ戻る</a>
+        </div>
+        {% if processed %}
+        {% include 'partials/_processed_requests.html' %}
+        {% if page > 1 or has_next %}
+        <nav class="pagination" aria-label="処理済みの申請のページ">
+          {% if page > 1 %}<a class="small-button link-button" href="{{ url_for('requests.processed', page=page - 1 if page > 2 else None) }}">← 新しい申請</a>{% endif %}
+          {% if has_next %}<a class="small-button link-button pagination-next" href="{{ url_for('requests.processed', page=page + 1) }}">古い申請 →</a>{% endif %}
+        </nav>
+        {% endif %}
+        {% elif page > 1 %}
+        <div class="message-state empty-state">
+          <strong>このページには申請がありません</strong>
+          <p><a href="{{ url_for('requests.processed') }}">最新の処理済みの申請へ戻る</a></p>
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <strong>まだ処理済みの申請はありません</strong>
+        </div>
+        {% endif %}
+      </section>
+{% endblock %}

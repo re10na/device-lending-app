@@ -1,0 +1,33 @@
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>紛失履歴</h2>
+            <p>紛失の報告と、見つかった（解除した）記録を新しい順に表示します。</p>
+          </div>
+          <span class="record-count">{{ loss_history|length }} 件</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>紛失日</th><th>報告</th><th>紛失時の貸出先</th><th>状況</th><th>解除日 / 理由</th></tr>
+            </thead>
+            <tbody>
+              {% for loss in loss_history %}
+              <tr>
+                <td>{{ loss.reported_on }}</td>
+                <td>{% if loss.reported_by == 'user' %}利用者{% else %}管理者{% endif %}</td>
+                <td>{% if loss.shain_code %}{{ loss.employee_name or '不明' }}<span class="secondary-value">{{ loss.shain_code }}</span>{% else %}—{% endif %}</td>
+                <td class="wrap-cell">{{ loss.detail or '—' }}</td>
+                <td class="wrap-cell">
+                  {% if loss.found_on %}
+                  {{ loss.found_on }}<span class="secondary-value">{{ loss.resolution or '' }}</span>
+                  {% else %}
+                  <span class="status-pill flag-lost">{% if device.disposed_on %}見つからないまま廃棄{% else %}紛失中{% endif %}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>

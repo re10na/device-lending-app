@@ -1,0 +1,211 @@
+{% from 'macros.html' import csrf_field, next_field, model_options, identifier_inputs with context %}
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>操作</h2>
+            <p>この機器の現在の状態で実行できる操作です。</p>
+          </div>
+        </div>
+        {% if device.disposed_on %}
+        <p class="notice-line">廃棄済みの機器は貸出・設置・故障登録などの操作ができません（履歴の修正は下の各欄から行えます）。</p>
+        {% else %}
+        {% set is_lost = 'lost' in device.flags %}
+        {% set open_loss = loss_history|selectattr('found_on', 'none')|first %}
+        <div class="action-grid">
+
+          {# 貸出 / 返却 #}
+          {% if device.placement == 'loaned' and is_lost %}
+          <div class="action-card">
+            <h3>返却</h3>
+            <p>{{ device.holder_name or ('社員番号' ~ device.holder_code) }}さんが借りています（{{ device.loaned_on }}〜）。</p>
+            <p class="notice-line">紛失中のため返却できません。見つかったら先に紛失を解除してください。</p>
+          </div>
+          {% elif device.placement == 'loaned' %}
+          <div class="action-card">
+            <h3>返却</h3>
+            <p>{{ device.holder_name or ('社員番号' ~ device.holder_code) }}さんが借りています（{{ device.loaned_on }}〜）。</p>
+            <form action="{{ url_for('loans.return_loan', loan_id=device.loan_id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <button class="small-button return-button" type="submit">返却登録</button>
+            </form>
+          </div>
+          {% elif is_lost %}
+          <div class="action-card">
+            <h3>貸出</h3>
+            <p class="notice-line">紛失中の機器は貸し出せません。</p>
+          </div>
+          {% elif device.has_blocking_issue %}
+          <div class="action-card">
+            <h3>貸出</h3>
+            <p class="notice-line">貸出不可の故障・不具合が未解決のため貸し出せません。</p>
+          </div>
+          {% elif device.status == 'installed' %}
+          <div class="action-card">
+            <h3>貸出</h3>
+            <p class="notice-line">設置中の機器は貸し出せません。先に保管中に戻してください。</p>
+          </div>
+          {% else %}
+          <div class="action-card">
+            <h3>貸出</h3>
+            {% for issue in unresolved_minor_issues %}
+            <p class="notice-line">⚠ 不具合あり（貸出は可能です）: {{ issue.detail }}</p>
+            {% endfor %}
+            {% if active_employees %}
+            <form class="loan-form" action="{{ url_for('loans.loan', device_id=device.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="employee-search">社員名・社員番号で検索</label>
+              <input id="employee-search" class="employee-search" type="search" placeholder="名前・社員番号で検索" autocomplete="off">
+              <label class="sr-only" for="loan-employee">貸出先社員</label>
+              <select id="loan-employee" name="shain_code" required>
+                <option value="">社員を選択</option>
+                {% for employee in active_employees %}
+                <option value="{{ employee.shain_code }}">{{ employee.name }}（{{ employee.shain_code }}）</option>
+                {% endfor %}
+              </select>
+              <button class="small-button" type="submit">貸出登録（今日）</button>
+            </form>
+            {% else %}
+            <span class="no-users">貸出可能な社員がいません</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {# 設置 #}
+          {% if device.placement != 'loaned' and not is_lost %}
+          <div class="action-card">
+            <h3>{% if device.status == 'installed' %}設置場所の変更{% else %}設置中にする{% endif %}</h3>
+            <form class="inline-form" action="{{ url_for('devices.install', device_id=device.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="location">設置場所</label>
+              <input id="location" name="location" maxlength="120" value="{{ device.location or '' }}" placeholder="例: 2階 会議室A" required>
+              <button class="small-button" type="submit">{% if device.status == 'installed' %}場所を変更{% else %}設置中にする{% endif %}</button>
+            </form>
+            {% if device.status == 'installed' %}
+            <form class="inline-form" action="{{ url_for('devices.uninstall', device_id=device.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <button class="small-button return-button" type="submit">保管中に戻す</button>
+            </form>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {# 故障・不具合の報告 #}
+          <div class="action-card">
+            <h3>故障・不具合を報告</h3>
+            <form class="stack-form" action="{{ url_for('issues.report', device_id=device.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="issue-detail">内容</label>
+              <textarea id="issue-detail" name="detail" maxlength="1000" placeholder="例: キーボードの一部のキーが反応しない" required></textarea>
+              <label class="check-label"><input type="checkbox" name="blocks_loan" checked> 貸出不可にする</label>
+              <button class="small-button" type="submit">報告する</button>
+            </form>
+          </div>
+
+          {# 紛失 #}
+          <div class="action-card{% if is_lost %} lost-card{% endif %}">
+            <h3>紛失</h3>
+            {% if is_lost and open_loss %}
+            <p>{{ open_loss.reported_on }} から紛失中です{% if open_loss.reported_by == 'user' %}（利用者から報告）{% endif %}。</p>
+            {% if open_loss.detail %}<p class="secondary-value">{{ open_loss.detail }}</p>{% endif %}
+            <form class="stack-form" action="{{ url_for('losses.resolve', loss_id=open_loss.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="loss-resolution">見つかった場所・理由</label>
+              <input id="loss-resolution" name="resolution" maxlength="1000" placeholder="例: 会議室で見つかった / 誤報告（任意）">
+              <button class="small-button return-button" type="submit">見つかった（紛失を解除）</button>
+            </form>
+            <p class="secondary-value">見つからない場合は、下の「廃棄」から廃棄できます。</p>
+            {% else %}
+            <form class="stack-form" action="{{ url_for('losses.report', device_id=device.id) }}" method="post" onsubmit="return confirm('{{ device.id|device_code }} を紛失中にします。よろしいですか？');">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="loss-detail">紛失の状況</label>
+              <textarea id="loss-detail" name="detail" maxlength="1000" placeholder="例: 10/12 の帰りの電車で紛失（任意）"></textarea>
+              {% if device.placement == 'loaned' %}<p class="secondary-value">貸出中のまま紛失中になります（{{ device.holder_name or ('社員番号' ~ device.holder_code) }}さん）。</p>{% endif %}
+              <button class="small-button danger-button" type="submit">紛失中にする</button>
+            </form>
+            {% endif %}
+          </div>
+
+          {# 照合情報の編集 #}
+          <div class="action-card">
+            <h3>照合情報の編集</h3>
+            <form class="stack-form" action="{{ url_for('devices.edit_identifiers', device_id=device.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              {{ identifier_inputs(device, only_type=device.device_type or '', fields=device.identifier_fields) }}
+              <button class="small-button" type="submit">照合情報を変更</button>
+            </form>
+          </div>
+
+          {# SIM の差し替え #}
+          {% if device.uses_sim %}
+          <div class="action-card">
+            <h3>SIM</h3>
+            {% if device.sim_id %}
+            <p>{{ device.sim_label }}{% if device.sim_extension %}（内線 {{ device.sim_extension }}）{% endif %}を差しています。</p>
+            <form action="{{ url_for('sims.detach', sim_id=device.sim_id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <button class="small-button return-button" type="submit">SIM を外す</button>
+            </form>
+            {% else %}
+            <p>SIM を差していません。</p>
+            {% endif %}
+            {% if free_sims %}
+            <form class="inline-form" action="{{ url_for('sims.attach') }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <input type="hidden" name="device_id" value="{{ device.id }}">
+              <label class="sr-only" for="attach-sim">差す SIM</label>
+              <select id="attach-sim" name="sim_id" required>
+                <option value="">未使用の SIM を選択</option>
+                {% for sim in free_sims %}
+                <option value="{{ sim.id }}">{{ sim.label }}{% if sim.extension %}（内線 {{ sim.extension }}）{% endif %}</option>
+                {% endfor %}
+              </select>
+              <button class="small-button" type="submit">{% if device.sim_id %}差し替える{% else %}差す{% endif %}</button>
+            </form>
+            {% else %}
+            <p class="notice-line">未使用の SIM がありません。<a class="plain-link" href="{{ url_for('sims.index') }}">SIM ページ</a>で登録してください。</p>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {# 機種変更 #}
+          <div class="action-card">
+            <h3>機種の変更</h3>
+            <form class="inline-form" action="{{ url_for('devices.change_model', device_id=device.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="change-model">機種</label>
+              <select id="change-model" name="device_model_id" required>
+                {{ model_options(models, device.device_model_id) }}
+              </select>
+              <button class="small-button" type="submit">機種を変更</button>
+            </form>
+          </div>
+
+          {# 貸出中は廃棄できない。紛失中だけは貸出を終えて廃棄できる #}
+          {% if device.placement != 'loaned' or is_lost %}
+          {% set lost_on_loan = is_lost and device.placement == 'loaned' %}
+          <div class="action-card">
+            <h3>廃棄</h3>
+            {% if lost_on_loan %}<p class="secondary-value">紛失中のため、{{ device.holder_name or ('社員番号' ~ device.holder_code) }}さんへの貸出も今日で終了します（借りていた人は記録に残ります）。</p>{% endif %}
+            <form class="inline-form" action="{{ url_for('devices.dispose', device_id=device.id) }}" method="post" onsubmit="return confirm('{{ device.id|device_code }} を廃棄済みにします。{% if lost_on_loan %}貸出も終了します。{% endif %}よろしいですか？');">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="disposal-reason">廃棄理由</label>
+              <input id="disposal-reason" name="disposal_reason" maxlength="255" placeholder="{% if is_lost %}廃棄理由（空欄なら「紛失」）{% else %}廃棄理由（任意）{% endif %}">
+              <button class="small-button danger-button" type="submit">廃棄する</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </section>

@@ -1,0 +1,46 @@
+{% from 'macros.html' import csrf_field, next_field with context %}
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>貸出履歴</h2>
+            <p>この機器の貸出を新しい順に表示します。</p>
+          </div>
+          <span class="record-count">{{ loan_history|length }} 件</span>
+        </div>
+        {% if loan_history %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>社員</th><th>貸出日</th><th>返却日</th><th>修正</th></tr>
+            </thead>
+            <tbody>
+              {% for loan in loan_history %}
+              <tr>
+                <td>
+                  {{ loan.employee_name or '社員マスタに無し' }}
+                  <span class="secondary-value">{{ loan.shain_code }}{% if loan.employee_retired %}（退職済み）{% endif %}</span>
+                </td>
+                <td>{{ loan.loaned_on }}</td>
+                <td>{% if loan.returned_on %}{{ loan.returned_on }}{% else %}<span class="status-pill loaned"><span></span>貸出中</span>{% endif %}</td>
+                <td>
+                  <details class="inline-edit">
+                    <summary>修正する</summary>
+                    <form class="edit-form" action="{{ url_for('loans.edit_loan', loan_id=loan.id) }}" method="post">
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      <label>社員番号<input name="shain_code" list="employee-codes" maxlength="20" value="{{ loan.shain_code }}" required></label>
+                      <label>貸出日<input type="date" name="loaned_on" value="{{ loan.loaned_on }}" required></label>
+                      <label>返却日（空欄なら貸出中）<input type="date" name="returned_on" value="{{ loan.returned_on or '' }}"></label>
+                      <button class="small-button" type="submit">修正を保存</button>
+                    </form>
+                  </details>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">まだ貸出履歴はありません。</p>
+        {% endif %}
+      </section>

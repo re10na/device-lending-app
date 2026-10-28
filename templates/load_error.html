@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+      <section class="inventory-panel">
+        <div class="message-state error-state" role="alert">
+          <span class="state-icon" aria-hidden="true">!</span>
+          <div>
+            <strong>データを読み込めませんでした</strong>
+            <p>データベースに接続できないか、テーブルがまだありません。管理者に確認してください。</p>
+          </div>
+        </div>
+      </section>
+{% endblock %}

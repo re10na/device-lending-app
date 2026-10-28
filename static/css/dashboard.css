@@ -1,0 +1,1260 @@
+/* ダッシュボード: 上部の検索欄（入力中の候補つき）と、右から出し入れする「最新の変更」 */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- 検索欄 --- */
+
+.quick-search {
+  margin-bottom: 23px;
+}
+
+.quick-search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 7px 7px 18px;
+  border: 1px solid var(--green-line);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 3px 12px rgba(24, 39, 75, .06);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.quick-search-form:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 4px 18px rgba(24, 39, 75, .1);
+}
+
+.quick-search-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.quick-search-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.quick-search-form input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.quick-search-form .primary-button {
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 999px;
+}
+
+.quick-search-hint {
+  margin: 8px 18px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.quick-search-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 4;
+  max-height: min(420px, 60vh);
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+  border: 1px solid var(--green-line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(24, 39, 75, .14);
+  list-style: none;
+}
+
+.quick-search-suggestions[hidden] {
+  display: none;
+}
+
+.suggestion-group {
+  padding: 8px 18px 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 18px;
+  cursor: pointer;
+}
+
+.suggestion strong {
+  font-weight: 600;
+}
+
+.suggestion span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion:hover,
+.suggestion[aria-selected="true"] {
+  background: var(--green-soft);
+}
+
+.suggestion-empty,
+.suggestion-more {
+  padding: 9px 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.suggestion-more {
+  border-top: 1px solid var(--line);
+}
+
+/* --- 機器の状況（左）と対応が必要なこと（右）。幅は 7:3 ---
+   どちらも「太字の見出し＋中身」の同じ作りにして、中は枠線ではなく区切り線で分ける。
+   赤は紛失中と、遅れている項目の小さな印だけに使う */
+
+/* 検索の列（左）、円グラフのまとまり（真ん中）、要確認・紛失中・最新の変更の列（右）を横に並べる */
+.dash-board {
+  /* 左右の列の幅 */
+  --side: 300px;
+  /* 円グラフの枠の大きさ。画面の高さ（上の帯のぶんを引く）と、本文の幅（ダッシュボードはサイドバーがないので
+     画面の幅。最大 1600px から左右の余白と、左右の列とすき間のぶんを引いたもの）の小さい方に合わせる */
+  --donut: clamp(320px, min(100vh - 110px, min(100vw, 1600px) - 84px - 2 * (var(--side) + 28px)), 1100px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 28px;
+  margin: 16px 0 28px;
+}
+
+.dash-card {
+  padding: 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 2px 5px rgba(24, 39, 75, .025);
+}
+
+/* 機器の状況はカード（枠・背景・影）にせず、ページの背景に直接置く */
+.status-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.dash-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.dash-card-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dash-card-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.dash-link {
+  flex: 0 0 auto;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dash-link:hover {
+  text-decoration: underline;
+}
+
+.dash-link:focus-visible,
+.todo-row:focus-visible,
+.todo-sub-main:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.dash-empty {
+  margin: 0;
+  padding: 14px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 対応が必要なこと */
+
+.todo-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todo-item + .todo-item {
+  border-top: 1px solid var(--line);
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 -10px;
+  padding: 14px 10px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color .15s ease;
+}
+
+a.todo-row:hover {
+  background: var(--canvas);
+}
+
+.todo-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.todo-text {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.todo-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.todo-caption {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-count {
+  flex: 0 0 auto;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -.04em;
+}
+
+.todo-count small {
+  margin-left: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.todo-arrow {
+  flex: 0 0 auto;
+  width: 14px;
+  color: var(--muted);
+  transition: transform .15s ease;
+}
+
+a.todo-row:hover .todo-arrow {
+  transform: translateX(3px);
+  color: var(--blue);
+}
+
+/* 0 件の行は控えめに */
+.todo-item:not(.is-active) .todo-label,
+.todo-item:not(.is-active) .todo-count {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.todo-item:not(.is-active) .todo-count {
+  font-size: 20px;
+}
+
+/* 1 件以上ある行の印の色 */
+.todo-lost.is-active .todo-dot { background: #b0303c; box-shadow: 0 0 0 4px #fde8ea; }
+.todo-broken.is-active .todo-dot { background: #cf5145; }
+.todo-review.is-active .todo-dot { background: #a85d76; }
+.todo-pending.is-active .todo-dot { background: #d8902f; }
+.todo-confirmed.is-active .todo-dot { background: #7f8fd6; }
+.todo-retiring.is-active .todo-dot { background: #d8902f; }
+
+/* 紛失中だけは、情報漏えいのおそれがあるので数字も赤にする */
+.todo-lost.is-active .todo-label,
+.todo-lost.is-active .todo-count {
+  color: #b0303c;
+}
+
+.todo-sub {
+  display: grid;
+  margin: -4px 0 12px 24px;
+  padding: 0;
+  list-style: none;
+}
+
+/* 細い列でも「○日待ち」が右端に収まるよう、名前と詳細を 2 段にする */
+.todo-sub li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.todo-sub-main {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.todo-sub-main strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.todo-sub-main span {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.todo-sub-main:hover strong {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+.todo-sub-note {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.todo-sub-note.is-late {
+  color: #b0303c;
+  font-weight: 600;
+}
+
+/* 機器の状況 */
+
+
+/* 円グラフと、凡例・種別の内訳を横に並べる */
+.placement-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+/* 円グラフと、その四隅のタイル（機器一覧・SIM・社員・申請）。
+   正方形の枠の真ん中に円を置き、枠の四隅（円の外側の空いたところ）にタイルを置く */
+.donut-stage {
+  /* 四隅のタイルをくり抜く半径（枠の幅に対する割合）。輪の外側の縁（viewBox 124 のうち半径 40 = 32.3%）
+     に、乗せたときに太くなるぶんと少しのすき間を足す */
+  --tile-cut: 34.5cqw;
+  /* タイルどうしのすき間の半分 */
+  --tile-gap: .6cqw;
+  position: relative;
+  width: var(--donut);
+  aspect-ratio: 1;
+  container-type: inline-size;
+}
+
+/* タイルを枠の四隅に直接置くため、nav の箱は作らない */
+.corner-nav {
+  display: contents;
+}
+
+/* 四隅のタイルは、枠を 4 等分したマスから、円グラフの中心を中心に輪の形にくり抜いた形。
+   --at はタイルから見た円グラフの中心の位置。中身はタイルの外側の角に寄せる */
+.corner-tl { top: 0; left: 0; --at: calc(100% + var(--tile-gap)) calc(100% + var(--tile-gap)); border-top-left-radius: 22px; }
+.corner-tr { top: 0; right: 0; --at: calc(0% - var(--tile-gap)) calc(100% + var(--tile-gap)); border-top-right-radius: 22px; align-items: flex-end; text-align: right; }
+.corner-bl { bottom: 0; left: 0; --at: calc(100% + var(--tile-gap)) calc(0% - var(--tile-gap)); border-bottom-left-radius: 22px; justify-content: flex-end; }
+.corner-br { bottom: 0; right: 0; --at: calc(0% - var(--tile-gap)) calc(0% - var(--tile-gap)); border-bottom-right-radius: 22px; align-items: flex-end; justify-content: flex-end; text-align: right; }
+
+.corner-tile {
+  --tile-bg: var(--surface);
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+  width: calc(50cqw - var(--tile-gap));
+  height: calc(50cqw - var(--tile-gap));
+  padding: 3.6cqw;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  /* くり抜いた縁にも細い線を描く（mask で枠線ごとくり抜くため、線は背景で描く） */
+  background: radial-gradient(circle at var(--at),
+    transparent var(--tile-cut),
+    var(--green-line) var(--tile-cut),
+    var(--green-line) calc(var(--tile-cut) + 1.5px),
+    var(--tile-bg) calc(var(--tile-cut) + 1.5px));
+  -webkit-mask: radial-gradient(circle at var(--at), transparent var(--tile-cut), #000 calc(var(--tile-cut) + .5px));
+  mask: radial-gradient(circle at var(--at), transparent var(--tile-cut), #000 calc(var(--tile-cut) + .5px));
+  color: inherit;
+  text-decoration: none;
+  transition: opacity .15s ease;
+}
+
+/* 種別の丸が出ている間は、丸が見やすいようにタイルを薄くする */
+.placement-chart.is-focused .corner-tile {
+  opacity: .35;
+}
+
+.corner-tile:hover {
+  --tile-bg: var(--green-soft);
+  border-color: var(--green-line);
+}
+
+.corner-tile:focus-visible {
+  --tile-bg: var(--green-soft);
+  outline: none;
+  border: 2px solid var(--blue);
+}
+
+.corner-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: max(46px, 8cqw);
+  height: max(46px, 8cqw);
+  place-items: center;
+  border-radius: 1.8cqw;
+  background: var(--green-soft);
+  color: var(--blue);
+  font-size: max(22px, 4cqw);
+}
+
+.corner-text {
+  display: grid;
+  gap: .6cqw;
+  min-width: 0;
+}
+
+.corner-text strong {
+  font-size: max(17px, 3.6cqw);
+}
+
+.corner-text > span {
+  color: var(--muted);
+  font-size: max(13px, 2.2cqw);
+  white-space: nowrap;
+}
+
+/* 申請の未処理件数。タイルの外へはみ出すとくり抜きで消えるので、「申請」の横に並べる */
+.corner-badge {
+  display: inline-block;
+  margin: 0 0 0 .8em;
+  vertical-align: .2em;
+}
+
+/* 円は枠いっぱいに重ね、タイルより手前に置く（飛び出す丸がタイルの上に出るように）。
+   円の何もないところはクリックを素通りさせて、下のタイルを押せるようにする。
+   中の数字は円の幅（cqw）に合わせて大きさを変える */
+.donut {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.donut-center {
+  pointer-events: auto;
+}
+
+.donut svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.donut circle {
+  fill: none;
+}
+
+/* くり抜いた範囲のクリックを受け止める（何もしない）。見た目には出ない */
+.donut .donut-blocker {
+  fill: transparent;
+  pointer-events: fill;
+}
+
+/* 輪は太めにして、中に区分の名前と台数を書く */
+.donut-track,
+.donut-segment {
+  stroke-width: 20;
+}
+
+.donut-track {
+  stroke: var(--line);
+}
+
+.donut-segment {
+  pointer-events: none;
+  transition: stroke-width .15s ease, opacity .15s ease;
+}
+
+.donut-segment.segment-loaned { stroke: var(--placement-loaned); }
+.donut-segment.segment-installed { stroke: var(--placement-installed); }
+.donut-segment.segment-stored { stroke: var(--placement-stored); }
+
+/* 押しやすくするための透明な当たり判定。見た目の線より太い */
+.donut-hit {
+  cursor: pointer;
+  stroke: transparent;
+  stroke-width: 24;
+  pointer-events: stroke;
+}
+
+.segment-link {
+  outline: none;
+}
+
+.segment-link:hover .donut-segment,
+.segment-link:focus-visible .donut-segment {
+  stroke-width: 22;
+}
+
+/* キーボードで選んでいる区分は、外側に細い線を出す */
+.segment-link:focus-visible .donut-hit {
+  stroke: var(--blue);
+  stroke-width: 1;
+  stroke-dasharray: inherit;
+  transform: scale(1.4);
+  transform-origin: 50px 50px;
+}
+
+/* 区分を選んでいるときは、その区分を太く、他を薄くする */
+.placement-chart.is-focused .donut-segment {
+  opacity: .3;
+}
+
+.placement-chart.is-focused .segment-link.is-active .donut-segment {
+  opacity: 1;
+  stroke-width: 22;
+}
+
+/* 輪の中の名前と台数。押す操作の邪魔をしないよう、文字は当たり判定にしない */
+.segment-label {
+  fill: var(--ink);
+  text-anchor: middle;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+
+.segment-label-name {
+  font-size: 3.6px;
+  font-weight: 600;
+  fill-opacity: .75;
+}
+
+.segment-label-value {
+  font-size: 7.4px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.segment-label-unit {
+  font-size: 3.4px;
+  font-weight: 500;
+}
+
+.placement-chart.is-focused .segment-label:not(.is-active) {
+  opacity: .35;
+}
+
+/* 種別の丸。ふだんは輪の上（--sx, --sy）で小さく透明にしておき、
+   区分を選ぶと外側の位置（--x, --y）へ、少し行き過ぎて戻る動き（ビョン）で飛び出す。
+   1 つずつ少し遅らせて出す（--i） */
+.bubble {
+  opacity: 0;
+  transform: translate(var(--sx), var(--sy)) scale(.2);
+  transition:
+    transform .2s ease,
+    opacity .15s ease;
+  pointer-events: none;
+}
+
+.donut-bubbles.is-active .bubble {
+  opacity: 1;
+  transform: translate(var(--x), var(--y)) scale(1);
+  transition:
+    transform .5s cubic-bezier(.34, 1.7, .5, 1) calc(var(--i) * 60ms),
+    opacity .15s ease calc(var(--i) * 60ms);
+  pointer-events: auto;
+}
+
+.bubble-link {
+  cursor: pointer;
+  outline: none;
+}
+
+.bubble-circle {
+  fill: var(--surface) !important;
+  stroke-width: 2.4;
+  transition: stroke-width .15s ease;
+}
+
+.bubble.type-0 .bubble-circle { stroke: var(--type-0); }
+.bubble.type-1 .bubble-circle { stroke: var(--type-1); }
+.bubble.type-2 .bubble-circle { stroke: var(--type-2); }
+.bubble.type-3 .bubble-circle { stroke: var(--type-3); }
+.bubble.type-4 .bubble-circle { stroke: var(--type-4); }
+.bubble.type-5 .bubble-circle { stroke: var(--type-5); }
+
+/* 丸に乗せたとき・キーボードで選んだときは、丸の中を種別の色で薄く塗る */
+.bubble-link:hover .bubble-circle,
+.bubble-link:focus-visible .bubble-circle {
+  stroke-width: 3.6;
+}
+
+.bubble-link:focus-visible .bubble-circle {
+  stroke: var(--blue);
+}
+
+.bubble-name,
+.bubble-count {
+  fill: var(--ink);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.bubble-name {
+  fill: var(--muted);
+  font-size: 3.8px;
+  font-weight: 600;
+}
+
+.bubble-count {
+  font-size: 6.4px;
+  font-weight: 700;
+}
+
+/* 円の中央。ふだんは合計、区分を選んでいるときはその区分の台数。押すとその一覧を開く */
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 2px;
+  width: 30cqw;
+  height: 30cqw;
+  border-radius: 50%;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  transition: background-color .15s ease;
+}
+
+.donut-center:hover {
+  background: var(--green-soft);
+}
+
+.donut-center:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.donut-center-label {
+  color: var(--muted);
+  font-size: max(12px, 2.8cqw);
+}
+
+.donut-center strong {
+  font-size: 10cqw;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+
+.donut-center small {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: max(13px, 3cqw);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .todo-row,
+  .todo-arrow,
+  .corner-tile,
+  .donut-segment,
+  .bubble,
+  .donut-bubbles.is-active .bubble,
+  .bubble-circle,
+  .donut-center,
+  .segment-label {
+    transition: none;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .dash-board {
+    gap: 12px;
+  }
+
+  /* 1100px 以下の指定（後ろに書いてある）より優先させるため、.dash-board から書く */
+  .dash-board .dash-side,
+  .dash-board .dash-search {
+    width: 100%;
+  }
+
+  /* 縦に並べたときに、円グラフの枠の幅が中身任せで潰れないよう、幅いっぱいにする */
+  .dash-board > .status-card {
+    width: 100%;
+  }
+
+  .dash-card {
+    padding: 18px;
+  }
+
+  /* 機器の状況は枠のないカードなので、余白も付けない */
+  .status-card {
+    padding: 0;
+  }
+
+
+  /* スマホでは四隅に置くと狭いので、タイルを円の上に 2 つ（機器一覧・SIM）、下に 2 つ（社員・申請）並べる */
+  .donut-stage {
+    display: grid;
+    width: 100%;
+    aspect-ratio: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "tl tr"
+      "donut donut"
+      "bl br";
+    gap: 10px;
+  }
+
+  .corner-tile {
+    position: relative;
+    width: auto;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 14px;
+    background: var(--tile-bg);
+    -webkit-mask: none;
+    mask: none;
+    text-align: left;
+  }
+
+  .corner-tl { grid-area: tl; }
+  .corner-tr { grid-area: tr; }
+  .corner-bl { grid-area: bl; }
+  .corner-br { grid-area: br; }
+
+  /* タイルが半分の幅になるので、「申請中はありません」などがはみ出さないよう折り返す */
+  .corner-text > span {
+    white-space: normal;
+  }
+
+  .donut {
+    position: relative;
+    inset: auto;
+    grid-area: donut;
+    aspect-ratio: 1;
+  }
+
+
+  .todo-caption {
+    white-space: normal;
+  }
+
+  .todo-sub {
+    margin-left: 0;
+  }
+
+  .todo-sub-main span {
+    white-space: normal;
+  }
+}
+
+/* --- 右の列（要確認・最新の変更） --- */
+
+.dash-side {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 16px;
+  width: var(--side);
+  /* 円グラフのまとまりと同じ高さにして、中身が多いときはパネルの中でスクロールする */
+  height: var(--donut);
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(24, 39, 75, .04);
+}
+
+.side-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.side-panel-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.side-panel-link {
+  margin-left: auto;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.side-panel-link:hover {
+  text-decoration: underline;
+}
+
+.side-panel-link:focus-visible,
+.search-result:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.side-panel-empty {
+  margin: auto 0;
+  padding: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* 要確認・紛失中。アイコンと台数だけの小さなタイルを 2 つ並べる。1 台以上あるときは赤にする */
+.alert-tiles {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alert-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(24, 39, 75, .04);
+  color: var(--muted);
+  text-decoration: none;
+  transition: border-color .15s ease, transform .15s ease;
+}
+
+.alert-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--green-line);
+}
+
+.alert-tile:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.alert-mark {
+  display: grid;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e3e7ec;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.alert-mark svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.alert-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.alert-text strong {
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+
+.alert-text small {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.alert-tile.is-alert {
+  border-color: #f0b7bd;
+  background: linear-gradient(180deg, #fff6f7, var(--surface) 70%);
+  color: #b0303c;
+}
+
+.alert-tile.is-alert .alert-mark {
+  background: #cf3a47;
+  box-shadow: 0 0 0 4px #fde8ea;
+}
+
+.alert-tile.is-alert strong {
+  color: #b0303c;
+}
+
+.alert-tile.is-alert:hover {
+  border-color: #e28c96;
+}
+
+/* 左の列（検索）。円グラフのまとまりと同じ高さにして、結果が多いときは結果の中でスクロールする */
+.dash-search {
+  flex: 0 0 auto;
+  width: var(--side);
+  height: var(--donut);
+}
+
+.dash-search .quick-search-form {
+  padding: 4px 4px 4px 14px;
+}
+
+.dash-search .quick-search-form input {
+  min-height: 38px;
+  font-size: 14px;
+}
+
+.dash-search .quick-search-hint {
+  margin: 8px 4px 0;
+  line-height: 1.6;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.search-results-title {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.search-result-list {
+  min-height: 0;
+  margin: 0 -8px;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.search-result:hover {
+  background: var(--green-soft);
+}
+
+.search-result-kind {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.search-result-kind.is-device {
+  background: #eef0ff;
+  color: #6374c5;
+}
+
+.search-result-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.search-result-text strong {
+  font-size: 14px;
+}
+
+.search-result-text span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 最新の変更。残りの高さを使い、多いときはパネルの中でスクロールする */
+.events-panel {
+  flex: 1 1 0;
+}
+
+.side-panel-scroll {
+  min-height: 0;
+  margin: 0 -20px;
+  overflow-y: auto;
+}
+
+.events-panel .event-list li {
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 20px;
+}
+
+/* 右の列を横に置くと円グラフが小さくなりすぎる幅では、右の列を円グラフの下に回す */
+@media (max-width: 1100px) {
+  .dash-board {
+    --donut: clamp(320px, min(100vh - 110px, 100vw - 84px), 1100px);
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* 検索 → 円グラフ → 要確認・紛失中と最新の変更、の順に縦に並べる */
+  .dash-side,
+  .dash-search {
+    width: min(100%, var(--donut));
+    height: auto;
+  }
+
+  /* 縦に並べたときは「残りの高さ」がないので、パネルは中身の高さで出す */
+  .side-panel.events-panel {
+    flex: none;
+  }
+
+  .search-result-list {
+    max-height: 320px;
+  }
+}
+
+/* --- 検索結果 --- */
+
+.result-heading {
+  margin: 0;
+  padding: 10px 19px 6px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.person-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 4px 19px 16px;
+  list-style: none;
+}
+
+.person-result {
+  display: grid;
+  gap: 3px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.person-result span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.person-result:hover {
+  border-color: var(--blue);
+  background: var(--green-soft);
+}
+
+.person-result:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* --- 最新の変更（右のパネル） --- */
+
+.drawer-count {
+  display: inline-block;
+  min-width: 20px;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.drawer-toggle[aria-expanded="true"] {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.drawer-close {
+  display: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.drawer-close:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* JS が動くときだけ、画面の右端に固定したパネルにする。
+   .js は base.html が読み込みの最初に付けるので、表示した瞬間からパネルになる（一瞬ちらつかない） */
+.js .events-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  width: min(400px, 100vw);
+  margin: 0;
+  overflow-y: auto;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  box-shadow: -8px 0 28px rgba(24, 39, 75, .12);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform .22s ease, visibility 0s linear .22s;
+}
+
+.js .events-drawer.is-open {
+  transform: none;
+  visibility: visible;
+  transition: transform .22s ease;
+}
+
+/* 前回開いていた状態を復元するときは、アニメーションさせずに開く */
+.js .events-drawer.is-instant {
+  transition: none;
+}
+
+.js .events-drawer .drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 狭いパネルでは、履歴の時刻を本文の下に回す */
+.js .events-drawer .event-list li {
+  flex-direction: column;
+  gap: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .events-drawer,
+  .js .events-drawer.is-open {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .quick-search-form {
+    padding-left: 14px;
+  }
+
+  .quick-search-form .primary-button {
+    padding: 0 14px;
+  }
+
+  .page-heading .heading-actions {
+    flex-wrap: wrap;
+  }
+}

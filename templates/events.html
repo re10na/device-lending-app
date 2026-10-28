@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import event_list %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+{% endblock %}
+
+{% block content %}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>{{ title }}</h1>
+          <p class="page-description">{{ description }}</p>
+        </div>
+      </section>
+
+      <section class="inventory-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>変更履歴</h2>
+            {% if events %}
+            <p>新しい順に {{ first_number }}〜{{ first_number + events|length - 1 }} 件目</p>
+            {% endif %}
+          </div>
+          {# 戻り先があるページだけ（SIM の変更履歴は SIM 一覧へ戻る）。すべての変更履歴には出さない #}
+          {% if back_url %}<a class="small-button link-button" href="{{ back_url }}">{{ back_label }}</a>{% endif %}
+        </div>
+        {% if events %}
+        {{ event_list(events, true) }}
+        {% if page > 1 or has_next %}
+        <nav class="pagination" aria-label="変更履歴のページ">
+          {% if page > 1 %}<a class="small-button link-button" href="{{ url_for(request.endpoint, page=page - 1 if page > 2 else None) }}">← 新しい記録</a>{% endif %}
+          {% if has_next %}<a class="small-button link-button pagination-next" href="{{ url_for(request.endpoint, page=page + 1) }}">古い記録 →</a>{% endif %}
+        </nav>
+        {% endif %}
+        {% elif page > 1 %}
+        <div class="message-state empty-state">
+          <strong>このページには記録がありません</strong>
+          <p><a href="{{ url_for(request.endpoint) }}">最新の変更履歴へ戻る</a></p>
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>まだ変更履歴はありません</strong>
+          <p>{{ empty_text }}</p>
+        </div>
+        {% endif %}
+      </section>
+{% endblock %}

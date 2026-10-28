@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import csrf_field, next_field, status_icon with context %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/user.css') }}">
+{% endblock %}
+
+{% block body_attrs %} class="user-page"{% endblock %}
+
+{% block content %}
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">MY DEVICES</p>
+          <h1>利用者画面</h1>
+          <p class="page-description">{{ employee.name }}さんが借りている機器と、今借りられる機器を確認できます。</p>
+        </div>
+        <button class="updated-label" type="button" onclick="window.location.reload()"><span class="refresh-icon" aria-hidden="true">↻</span> ページを再読み込みして更新</button>
+      </section>
+
+      {% if employee %}
+      {% set pending_count = requests|selectattr('status', 'equalto', 'pending')|list|length %}
+      {% set confirmed_count = requests|selectattr('status', 'equalto', 'confirmed')|list|length %}
+      <section class="summary-grid" aria-label="{{ employee.name }}さんの状況">
+        <a class="summary-card summary-link tone-loaned" href="#current-loans">
+          <div class="summary-top"><span>借りている機器</span>{{ status_icon('loaned') }}</div>
+          <div class="summary-value">{{ current_loans|length }}<span>台</span></div>
+          <div class="summary-caption">今の貸出設定</div>
+        </a>
+        <a class="summary-card summary-link tone-pending" href="#my-requests">
+          <div class="summary-top"><span>申請中</span>{{ status_icon('review') }}</div>
+          <div class="summary-value">{{ pending_count }}<span>件</span></div>
+          <div class="summary-caption">管理者の確認待ち</div>
+        </a>
+        <a class="summary-card summary-link tone-confirmed" href="#my-requests">
+          <div class="summary-top"><span>確認済み</span>{{ status_icon('installed') }}</div>
+          <div class="summary-value">{{ confirmed_count }}<span>件</span></div>
+          <div class="summary-caption">{% if confirmed_count %}管理者から連絡があります{% else %}受け渡し待ちの申請はありません{% endif %}</div>
+        </a>
+      </section>
+
+      <section class="inventory-panel" id="current-loans">
+        <div class="panel-heading">
+          <div>
+            <h2>{{ employee.name }}さんが借りている機器</h2>
+            <p>現在の貸出設定です。違っている場合は管理者に連絡してください。なくした場合は、すぐに「紛失を報告」から知らせてください。</p>
+          </div>
+          <span class="record-count">{{ current_loans|length }} 台</span>
+        </div>
+        {% if current_loans %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr><th>種別</th><th>メーカー / 機種</th><th>照合情報</th><th>貸出日</th><th>不具合</th><th>紛失</th></tr>
+            </thead>
+            <tbody>
+              {% for loan in current_loans %}
+              <tr>
+                <td data-label="種別">{{ loan.device_type or '—' }}</td>
+                <td data-label="機種">{{ loan.model_label }}</td>
+                <td data-label="照合情報">{{ loan.identifier_summary }}</td>
+                <td data-label="貸出日">{{ loan.loaned_on }}</td>
+                <td data-label="不具合">
+                  {% if loan.device_id in open_issue_devices %}
+                  <span class="status-pill loaned"><span></span>申請中</span>
+                  {% else %}
+                  <a class="small-button return-button row-action-link" href="#request-panel" data-fill-select="issue-device" data-value="{{ loan.device_id }}" data-focus="issue-detail">不具合を申請</a>
+                  {% endif %}
+                </td>
+                <td data-label="紛失">
+                  {% if loan.is_lost %}
+                  <span class="status-pill flag-lost">紛失を報告済み</span>
+                  {% else %}
+                  <details class="inline-edit">
+                    <summary>紛失を報告</summary>
+                    {# 申請ではなく報告なので、送った時点で紛失中になる #}
+                    <form class="edit-form" action="{{ url_for('user.report_loss') }}" method="post" onsubmit='return confirm({{ ("「" ~ loan.model_label ~ "」を紛失したと報告します。よろしいですか？")|tojson }});'>
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      <input type="hidden" name="device_id" value="{{ loan.device_id }}">
+                      <label>いつ・どこでなくしたか（任意）<textarea name="detail" maxlength="1000" placeholder="例: 10/12 の帰りの電車"></textarea></label>
+                      <button class="small-button danger-button" type="submit">紛失を報告する</button>
+                    </form>
+                  </details>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">現在借りている機器はありません。</p>
+        {% endif %}
+      </section>
+
+      {# 申請の状態 -> 表示の色（既存の status-pill の色を使う） #}
+      {% set status_pills = {'pending': 'loaned', 'confirmed': 'installed', 'done': 'available', 'rejected': 'flag-broken', 'cancelled': 'maintenance'} %}
+      <section class="inventory-panel" id="my-requests">
+        <div class="panel-heading">
+          <div>
+            <h2>{{ employee.name }}さんの申請状況</h2>
+            <p>新しい順に表示します。申請中・確認済みのものは取り消せます。確認済みになると、管理者から受け渡しの日時などの連絡があります。</p>
+          </div>
+          <span class="record-count">{{ requests|length }} 件</span>
+        </div>
+        {% if requests %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr><th>申請日時</th><th>種類</th><th>機器 / 機種</th><th>内容</th><th>状態</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for req in requests %}
+              <tr>
+                <td data-label="申請日時">{{ req.requested_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td data-label="種類">{{ REQUEST_TYPES[req.request_type] }}</td>
+                <td data-label="機器 / 機種">
+                  {{ req.model_label }}
+                  {% if req.identifier_summary %}<span class="secondary-value">{{ req.identifier_summary }}</span>{% endif %}
+                </td>
+                <td class="wrap-cell" data-label="内容">{{ req.detail or '—' }}</td>
+                <td data-label="状態"><span class="status-pill {{ status_pills[req.status] }}"><span></span>{{ REQUEST_STATUSES[req.status] }}</span></td>
+                {% if req.status not in ('pending', 'confirmed') %}
+                <td></td>
+                {% else %}
+                <td data-label="">
+                  {# tojson が ' もエスケープするので、属性は ' で囲む #}
+                  <form action="{{ url_for('user.cancel_request', request_id=req.id) }}" method="post" onsubmit='return confirm({{ ("「" ~ req.model_label ~ "」の" ~ ('不具合の申請' if req.request_type == 'issue' else '借りたい申請') ~ "を取り消します。よろしいですか？")|tojson }});'>
+                    {{ csrf_field() }}
+                    {{ next_field() }}
+                    <button class="small-button return-button" type="submit">取り消す</button>
+                  </form>
+                </td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">まだ申請はありません。</p>
+        {% endif %}
+      </section>
+
+      <section class="inventory-panel action-panel" id="request-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>申請</h2>
+            <p>管理者が確認してから対応します。結果は上の「{{ employee.name }}さんの申請状況」で確認できます。</p>
+          </div>
+        </div>
+        <div class="action-grid">
+          <div class="action-card">
+            <h3>不具合を申請</h3>
+            {% if current_loans %}
+            <form class="stack-form" action="{{ url_for('user.request_issue') }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="issue-device">機器</label>
+              <select id="issue-device" name="device_id" required>
+                <option value="">借りている機器を選択</option>
+                {% for loan in current_loans %}
+                <option value="{{ loan.device_id }}">{{ loan.model_label }}（{{ loan.identifier_summary }}）</option>
+                {% endfor %}
+              </select>
+              <label class="sr-only" for="issue-detail">不具合の内容</label>
+              <textarea id="issue-detail" name="detail" maxlength="1000" placeholder="例: 画面が時々真っ暗になる" required></textarea>
+              <button class="small-button" type="submit">申請する</button>
+            </form>
+            {% else %}
+            <p>不具合を申請できるのは、今借りている機器だけです。</p>
+            {% endif %}
+          </div>
+
+          <div class="action-card">
+            <h3>借りたい機器を申請</h3>
+            {% if requestable_models %}
+            <form class="stack-form" action="{{ url_for('user.request_loan') }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="loan-model">機種</label>
+              <select id="loan-model" name="device_model_id" required>
+                <option value="">借りたい機種を選択</option>
+                {% for model in requestable_models %}
+                <option value="{{ model.model_id }}">{{ model.device_type }} / {{ model.model_label }}</option>
+                {% endfor %}
+              </select>
+              <label class="sr-only" for="loan-reason">理由（任意）</label>
+              <textarea id="loan-reason" name="detail" maxlength="1000" placeholder="理由（任意）例: スマホが壊れたので代わりが欲しい"></textarea>
+              <button class="small-button" type="submit">申請する</button>
+            </form>
+            <p>実際に渡す機器は管理者が決めます。</p>
+            {% else %}
+            <p>今借りられる機器がないため、申請できません。管理者に相談してください。</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="inventory-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>借りられる機器</h2>
+            <p>貸出できる機器の機種と台数です。⚠ 不具合ありの機器も借りられます。</p>
+          </div>
+        </div>
+
+        <form class="inventory-filter" action="{{ url_for('user.index') }}" method="get">
+          {% if show_all_history %}<input type="hidden" name="history" value="all">{% endif %}
+          <label for="type-filter">種別</label>
+          <select id="type-filter" name="device_type" data-auto-submit>
+            <option value="">すべて</option>
+            {% for type in device_types %}
+            <option value="{{ type }}"{% if selected_type == type %} selected{% endif %}>{{ type }}</option>
+            {% endfor %}
+          </select>
+          <button class="filter-button" type="submit">絞り込む</button>
+          {% if selected_type %}
+          <a class="clear-filter" href="{{ url_for('user.index') }}">絞り込みを解除</a>
+          {% endif %}
+        </form>
+
+        {% if available %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr><th>種別</th><th>メーカー / 機種</th><th>状態</th><th>台数</th>{% if employee %}<th>申請</th>{% endif %}</tr>
+            </thead>
+            <tbody>
+              {% for row in available %}
+              {# 同じ機種が「正常」「不具合あり」の複数行に分かれるので、ボタンは機種の最初の行だけに出す #}
+              {% set first_of_model = loop.changed(row.model_id) %}
+              <tr>
+                <td data-label="種別">{{ row.device_type }}</td>
+                <td data-label="機種">{{ row.model_label }}</td>
+                <td data-label="状態">
+                  {% if row.has_minor_issue %}
+                  <span class="status-pill flag-minor"><span></span>不具合あり</span>
+                  <span class="secondary-value">{{ row.issue_details }}</span>
+                  {% else %}
+                  <span class="status-pill available"><span></span>正常</span>
+                  {% endif %}
+                </td>
+                <td data-label="台数">{{ row.available_count }} 台</td>
+                {% if employee and not first_of_model %}
+                <td></td>
+                {% elif employee %}
+                <td data-label="申請">
+                  {% if row.model_id in open_loan_models %}
+                  <span class="status-pill loaned"><span></span>申請中</span>
+                  {% else %}
+                  <a class="small-button row-action-link" href="#request-panel" data-fill-select="loan-model" data-value="{{ row.model_id }}" data-focus="loan-reason">この機種を申請</a>
+                  {% endif %}
+                </td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>今借りられる機器はありません</strong>
+          <p>{% if selected_type %}種別の選択を変えるか、絞り込みを解除してください。{% else %}管理者に相談してください。{% endif %}</p>
+        </div>
+        {% endif %}
+      </section>
+
+      {% if employee %}
+      {% set shown_history = loan_history if show_all_history else loan_history[:HISTORY_PREVIEW_COUNT] %}
+      <section class="inventory-panel" id="loan-history">
+        <div class="panel-heading">
+          <div>
+            <h2>貸出履歴</h2>
+            <p>これまでに借りた機器です（貸出中を先頭に、新しい順）。</p>
+          </div>
+          <span class="record-count">{{ loan_history|length }} 件</span>
+        </div>
+        {% if loan_history %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr><th>種別</th><th>メーカー / 機種</th><th>照合情報</th><th>貸出日</th><th>返却日</th></tr>
+            </thead>
+            <tbody>
+              {% for loan in shown_history %}
+              <tr>
+                <td data-label="種別">{{ loan.device_type or '—' }}</td>
+                <td data-label="機種">{{ loan.model_label }}</td>
+                <td data-label="照合情報">{{ loan.identifier_summary }}</td>
+                <td data-label="貸出日">{{ loan.loaned_on }}</td>
+                <td data-label="返却日">{% if loan.returned_on %}{{ loan.returned_on }}{% else %}<span class="status-pill loaned"><span></span>貸出中</span>{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if loan_history|length > HISTORY_PREVIEW_COUNT %}
+        <p class="table-more">
+          {% if show_all_history %}
+          <a href="{{ url_for('user.index', device_type=selected_type or None, _anchor='loan-history') }}">新しい {{ HISTORY_PREVIEW_COUNT }} 件だけ表示</a>
+          {% else %}
+          <a href="{{ url_for('user.index', device_type=selected_type or None, history='all', _anchor='loan-history') }}">すべて見る（{{ loan_history|length }} 件）</a>
+          {% endif %}
+        </p>
+        {% endif %}
+        {% else %}
+        <p class="notice-line">まだ貸出履歴はありません。</p>
+        {% endif %}
+      </section>
+      {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/user-page.js') }}" defer></script>
+{% endblock %}

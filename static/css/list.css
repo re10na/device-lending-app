@@ -1,0 +1,445 @@
+/* 一覧ページ（機器・人物・SIM・申請・変更履歴）で共通の見た目。説明文を減らし、
+   数は色付きのタイル、絞り込みは札と丸い検索欄で見せる（ダッシュボードと同じ考え方）。
+   タイルの色は --tile-color で変える。状態の色は base.css の --placement-*、種別の色は --type-* */
+
+.list-heading {
+  align-items: center;
+  padding-bottom: 18px;
+}
+
+.list-heading h1 {
+  margin-bottom: 4px;
+}
+
+.add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(22, 128, 78, .18);
+}
+
+/* --- 数のタイル（押すと絞り込む・その欄へ移動する） --- */
+
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.stat-tile {
+  --tile-color: var(--blue);
+  position: relative;
+  display: grid;
+  gap: 6px;
+  overflow: hidden;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(24, 39, 75, .04);
+  color: inherit;
+  text-decoration: none;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+/* タイルの枚数が 5 枚でないページ用 */
+.stat-tiles.tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.stat-tiles.tiles-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.tile-loaned { --tile-color: var(--placement-loaned); }
+.tile-installed { --tile-color: var(--placement-installed); }
+.tile-stored { --tile-color: var(--placement-stored); }
+.tile-disposed { --tile-color: #a3abb6; }
+
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 39, 75, .08);
+}
+
+.stat-tile:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* 選んでいるタイルは、その色の線と薄い背景で示す */
+.stat-tile[aria-current] {
+  border-color: var(--tile-color);
+  background: color-mix(in srgb, var(--tile-color) 9%, var(--surface));
+}
+
+.stat-tile[aria-current]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--tile-color);
+}
+
+.stat-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--tile-color);
+}
+
+.stat-tile strong {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.04em;
+}
+
+.stat-tile strong small {
+  margin-left: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* --- 絞り込みの札 --- */
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.filter-chip:not(.chip-broken, .chip-minor, .chip-review, .chip-lost) {
+  padding-left: 14px;
+}
+
+.filter-chip .status-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.filter-chip .status-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.chip-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.filter-chip:hover {
+  border-color: var(--green-line);
+}
+
+.filter-chip:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.filter-chip[aria-current] {
+  border-color: var(--blue);
+  background: var(--green-soft);
+  color: var(--blue);
+}
+
+.chip-broken[aria-current],
+.chip-lost[aria-current] {
+  border-color: #e28c96;
+  background: #fff4f5;
+  color: #b0303c;
+}
+
+.chip-review[aria-current] {
+  border-color: #d6a6b8;
+  background: #fbf1f5;
+  color: #a85d76;
+}
+
+.chip-minor[aria-current] {
+  border-color: #e9c48e;
+  background: #fff8ec;
+  color: #b87413;
+}
+
+/* --- 絞り込みの行と表 --- */
+
+.list-panel {
+  border-radius: 16px;
+}
+
+.list-filter {
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* キーワードは虫めがね付きの丸い検索欄 */
+.list-search {
+  position: relative;
+  display: flex;
+  flex: 1 1 280px;
+  align-items: center;
+}
+
+.list-search-icon {
+  position: absolute;
+  left: 13px;
+  width: 17px;
+  height: 17px;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.list-filter .list-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding-left: 38px;
+  border-radius: 999px;
+}
+
+.list-filter select {
+  min-width: 0;
+  min-height: 38px;
+  border-radius: 999px;
+}
+
+.list-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.list-panel td {
+  height: 62px;
+}
+
+.device-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 種別の色の丸いアイコン。色だけに頼らないよう、種別の短い名前を中に書く */
+.type-badge {
+  --type-color: var(--type-0);
+  display: inline-grid;
+  flex: 0 0 auto;
+  /* 機器名の書き出しがそろうよう、幅は種別によらず同じにする（「IP電話」が収まる幅） */
+  width: 56px;
+  height: 30px;
+  padding: 0 4px;
+  place-items: center;
+  border: 1.5px solid var(--type-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--type-color) 12%, var(--surface));
+  color: color-mix(in srgb, var(--type-color) 75%, #1e293b);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.type-badge.type-1 { --type-color: var(--type-1); }
+.type-badge.type-2 { --type-color: var(--type-2); }
+.type-badge.type-3 { --type-color: var(--type-3); }
+.type-badge.type-4 { --type-color: var(--type-4); }
+.type-badge.type-5 { --type-color: var(--type-5); }
+
+/* 人物一覧: 名前の頭文字の丸いアイコン（在籍は緑、退職済みは灰色） */
+.avatar {
+  display: grid;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--blue);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.avatar.is-retired {
+  background: #eef0f3;
+  color: #8994a4;
+}
+
+.member-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* SIM: 丸い「SIM」アイコン。使用中は橙、未使用は緑（上のタイルと同じ色） */
+.sim-badge {
+  display: grid;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 30px;
+  place-items: center;
+  border: 1.5px solid var(--placement-stored);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--placement-stored) 12%, var(--surface));
+  color: color-mix(in srgb, var(--placement-stored) 75%, #1e293b);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sim-badge.is-used {
+  border-color: var(--placement-loaned);
+  background: color-mix(in srgb, var(--placement-loaned) 12%, var(--surface));
+  color: color-mix(in srgb, var(--placement-loaned) 75%, #1e293b);
+}
+
+.sim-number {
+  font-size: 14px;
+}
+
+/* 申請: 種類の札（不具合は赤系、借りたいは青系）と、カードの左の色の線 */
+.request-type {
+  --type-color: var(--type-1);
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 9px;
+  border: 1px solid color-mix(in srgb, var(--type-color) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--type-color) 10%, var(--surface));
+  color: color-mix(in srgb, var(--type-color) 80%, #1e293b);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+.request-type.is-issue {
+  --type-color: #cf5145;
+}
+
+.request-card {
+  border-left: 4px solid var(--type-1);
+  border-radius: 12px;
+}
+
+.request-card.is-issue {
+  border-left-color: #cf5145;
+}
+
+/* 申請のタイルはページ内の欄へ移動するリンク */
+html:has(.request-sections) {
+  scroll-behavior: smooth;
+}
+
+.request-sections > section {
+  scroll-margin-top: 16px;
+}
+
+/* 貸出台数。押すとその人が借りている機器の一覧へ */
+.loan-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: #fff5e7;
+  color: #b87413;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.loan-count small {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+a.loan-count:hover {
+  text-decoration: underline;
+}
+
+.loan-count.is-zero {
+  background: transparent;
+  color: #b8c0cc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.request-sections) {
+    scroll-behavior: auto;
+  }
+
+  .stat-tile,
+  .filter-chip {
+    transition: none;
+  }
+
+  .stat-tile:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 1050px) {
+  .stat-tiles,
+  .stat-tiles.tiles-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .stat-tiles:not(.tiles-3) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .list-heading {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .list-tools {
+    margin-left: 0;
+  }
+
+  /* 表をカード型にしたとき（responsive.css の .stack-table）、上の高さ 62px が残ると行の間が空きすぎる */
+  .list-panel .stack-table td {
+    height: auto;
+  }
+
+  /* 「＋ SIM を登録」などが 2 行に折れないようにする */
+  .add-button {
+    white-space: nowrap;
+  }
+}

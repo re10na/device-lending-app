@@ -1,0 +1,43 @@
+{% from 'macros.html' import placement_pill, flag_pills with context %}
+        {% if devices %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr>
+                <th>機器</th>
+                <th>照合情報</th>
+                <th>種別</th>
+                <th>メーカー / 機種</th>
+                <th>状態</th>
+                <th>注意</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for device in devices %}
+              <tr>
+                <td class="asset-tag" data-label="機器">
+                  {# 種別の色の丸いアイコン（色だけに頼らないよう、種別名も中に書く） #}
+                  <span class="device-cell">
+                    <span class="type-badge type-{{ device.type_slot }}" title="{{ device.device_type or '種別不明' }}">{{ device.type_short }}</span>
+                    <span><a class="plain-link" href="{{ url_for('devices.detail', device_id=device.id) }}">{{ device.display_name }}</a>{% if device.main_identifier %}<small class="sub-code">{{ device.code }}</small>{% endif %}</span>
+                  </span>
+                </td>
+                <td data-label="照合情報">{{ device.identifier_summary or '—' }}{% if device.serial_number %}<small class="sub-code">S/N {{ device.serial_number }}</small>{% endif %}</td>
+                <td data-label="種別">{{ device.device_type or '—' }}</td>
+                <td data-label="機種">{{ device.model_label }}</td>
+                <td data-label="状態">{{ placement_pill(device) }}</td>
+                <td data-label="注意">{{ flag_pills(device) }}{% if not device.flags %}—{% endif %}</td>
+                <td data-label="操作"><a class="small-button return-button link-button" href="{{ url_for('devices.detail', device_id=device.id) }}">詳細 <span aria-hidden="true">→</span></a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>条件に合う機器はありません</strong>
+          <p>{{ empty_hint|default('条件を変えて、もう一度お試しください。') }}</p>
+        </div>
+        {% endif %}

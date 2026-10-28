@@ -1,0 +1,112 @@
+{% macro csrf_field() %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{# 操作後に今の画面へ戻るための hidden（サーバー側で内部パスだけ受け付ける） #}
+{% macro next_field() %}
+<input type="hidden" name="next" value="{{ request.path }}{% if request.query_string %}?{{ request.query_string.decode() }}{% endif %}">
+{%- endmacro %}
+
+{% macro placement_pill(device) %}
+<span class="status-pill {{ device.placement }}"><span></span>{{ device.placement_label }}</span>
+{%- endmacro %}
+
+{% macro flag_pills(device) %}
+{%- for flag in device.flags -%}
+<span class="status-pill flag-{{ flag }}">{{ FLAGS[flag] }}</span>
+{% endfor -%}
+{%- endmacro %}
+
+{# ダッシュボードと同じ状態マーク。label を渡すと読み上げ・マウスを乗せたときの説明になる #}
+{% macro status_icon(kind, label=none) %}
+<span class="status-icon status-icon-{{ kind }}"{% if label %} role="img" aria-label="{{ label }}" title="{{ label }}"{% else %} aria-hidden="true"{% endif %}>
+{% if kind == 'loaned' %}
+<svg viewBox="0 0 24 24" fill="none">
+  <circle cx="9" cy="7" r="3"></circle>
+  <path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19"></path>
+  <rect x="15" y="12" width="6" height="8" rx="1"></rect>
+  <path d="M17 14h2"></path>
+</svg>
+{% elif kind == 'installed' %}
+<svg viewBox="0 0 24 24" fill="none">
+  <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+  <path d="M8 20h8m-4-4v4m-5-9 3-3 2 2 4-4"></path>
+</svg>
+{% elif kind == 'stored' %}
+<svg viewBox="0 0 24 24" fill="none">
+  <path d="M3 8.5 12 4l9 4.5v10L12 23l-9-4.5v-10Z"></path>
+  <path d="m3.5 8.7 8.5 4.2 8.5-4.2M12 13v9"></path>
+  <path d="M8 6l9 4.5"></path>
+</svg>
+{% elif kind in ('broken', 'minor') %}
+<svg viewBox="0 0 24 24" fill="none">
+  <path d="M14.5 6.5a5 5 0 0 0-6.7 6.7L3 18l3 3 4.8-4.8a5 5 0 0 0 6.7-6.7L14 13l-3-3 3.5-3.5Z"></path>
+  <path d="m16 3 1 2m3 1-2 1"></path>
+</svg>
+{% elif kind == 'disposed' %}
+<svg viewBox="0 0 24 24" fill="none">
+  <path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"></path>
+  <path d="M10 11v6m4-6v6"></path>
+</svg>
+{% elif kind == 'lost' %}
+<svg viewBox="0 0 24 24" fill="none">
+  <rect x="7" y="2.5" width="10" height="16" rx="2"></rect>
+  <path d="M12 7v4m0 3h.01"></path>
+  <path d="M4 21.5h16"></path>
+</svg>
+{% elif kind == 'review' %}
+<svg viewBox="0 0 24 24" fill="none">
+  <circle cx="10.5" cy="10.5" r="6.5"></circle>
+  <path d="m15.5 15.5 5 5M10.5 7.5v4m0 3h.01"></path>
+</svg>
+{% endif %}
+</span>
+{%- endmacro %}
+
+{# 機器の配置と注意フラグを、状態マークで並べる #}
+{% macro device_status_icons(device) %}
+<span class="status-icon-group">
+  {{ status_icon(device.placement, device.placement_label) }}
+  {% for flag in device.flags %}{{ status_icon(flag, FLAGS[flag]) }}{% endfor %}
+</span>
+{%- endmacro %}
+
+{# 機種の選択肢。種別ごとにグループ化して「メーカー 機種名」を表示する #}
+{% macro model_options(models, selected=none) %}
+{% for device_type, group in models|groupby('device_type') %}
+<optgroup label="{{ device_type }}">
+  {% for model in group %}
+  <option value="{{ model.id }}" data-device-type="{{ model.device_type }}"{% if selected == model.id %} selected{% endif %}>{{ model.manufacturer }} {{ model.model_name }}</option>
+  {% endfor %}
+</optgroup>
+{% endfor %}
+{% endmacro %}
+
+{# 変更履歴の一覧。show_device=true なら機器へのリンクを付ける。
+   各行の先頭に、種類（貸出・故障・紛失・SIM・機器）の色の印を付ける（色だけに頼らないよう種類名も書く） #}
+{% macro event_list(events, show_device) %}
+{% set kind_labels = {'loan': '貸出', 'issue': '故障', 'lost': '紛失', 'sim': 'SIM', 'device': '機器'} %}
+<ul class="event-list">
+  {% for event in events %}
+  <li class="event-{{ event.kind }}">
+    <div class="event-main">
+      <span class="event-kind">{{ kind_labels[event.kind] }}</span>
+      {% if show_device and event.device_id %}<a class="plain-link" href="{{ url_for('devices.detail', device_id=event.device_id) }}"><strong>{{ event.subject }}</strong></a>{% else %}{{ event.subject }}{% endif %}{{ event.text }}
+      {% for line in event.details %}<span class="secondary-value">{{ line }}</span>{% endfor %}
+    </div>
+    <time class="event-time">{{ event.occurred_at }}</time>
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{# 照合情報の入力欄。only_type を渡すとその種別の項目だけ、渡さなければ全項目（data-types 付き）。 #}
+{% macro identifier_inputs(device=none, only_type=none, fields=none) %}
+{% set shown = fields if fields is not none else IDENTIFIER_FIELDS.keys() %}
+{% for field in shown %}
+<label class="identifier-field" data-field="{{ field }}"{% if IDENTIFIER_FIELD_TYPES[field] and only_type is none %} data-types="{{ IDENTIFIER_FIELD_TYPES[field]|join(' ') }}"{% endif %}>
+  {{ IDENTIFIER_FIELDS[field][0] }}
+  <input name="{{ field }}" maxlength="{{ IDENTIFIER_FIELDS[field][1] }}" value="{% if device %}{{ device[field] or '' }}{% endif %}" placeholder="{{ IDENTIFIER_FIELDS[field][2] }}" autocomplete="off">
+</label>
+{% endfor %}
+{% endmacro %}

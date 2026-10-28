@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import placement_pill, flag_pills, event_list, device_status_icons with context %}
+
+{% block content %}
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">DEVICE DETAIL</p>
+          <h1 class="device-title">{{ device_status_icons(device) }}{{ device.display_name }}　{{ device.model_label }}{% if device.main_identifier %} <small class="sub-code">{{ device.code }}</small>{% endif %}</h1>
+          <p class="page-description"><a class="clear-filter" href="{{ url_for('devices.index') }}">← 機器一覧へ戻る</a></p>
+        </div>
+        <button class="updated-label" type="button" onclick="window.location.reload()"><span class="refresh-icon" aria-hidden="true">↻</span> ページを再読み込みして更新</button>
+      </section>
+
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>機器情報</h2>
+            <p>現在の状態と注意マーク</p>
+          </div>
+          <div class="pill-group">{{ placement_pill(device) }}{{ flag_pills(device) }}</div>
+        </div>
+        <dl class="detail-list">
+          {% for field in device.identifier_fields %}
+          <div class="identifier-item"><dt>{{ IDENTIFIER_FIELDS[field][0] }}</dt><dd>{{ device[field] or '未登録' }}</dd></div>
+          {% endfor %}
+          {% if device.uses_sim %}
+          {% if device.sim_id %}
+          <div class="identifier-item"><dt>外線（SIM）</dt><dd>{{ device.phone_display or '—' }}</dd></div>
+          <div class="identifier-item"><dt>内線（SIM）</dt><dd>{{ device.sim_extension or '—' }}</dd></div>
+          <div class="identifier-item"><dt>SIM番号</dt><dd>{{ device.sim_iccid or '—' }}</dd></div>
+          {% else %}
+          <div class="identifier-item"><dt>SIM</dt><dd>差していません</dd></div>
+          {% endif %}
+          {% endif %}
+          <div><dt>管理番号</dt><dd>{{ device.id|device_code }}</dd></div>
+          <div><dt>種別</dt><dd>{{ device.device_type or '—' }}</dd></div>
+          <div><dt>メーカー / 機種</dt><dd>{{ device.model_label }}</dd></div>
+          {% if device.placement == 'installed' %}<div><dt>設置場所</dt><dd>{{ device.location }}</dd></div>{% endif %}
+          {% if device.placement == 'loaned' %}<div><dt>貸出日</dt><dd>{{ device.loaned_on }}</dd></div>{% endif %}
+          {% if device.disposed_on %}
+          <div><dt>廃棄日</dt><dd>{{ device.disposed_on }}</dd></div>
+          <div><dt>廃棄理由</dt><dd>{{ device.disposal_reason or '—' }}</dd></div>
+          {% endif %}
+        </dl>
+        {% if 'lost' in device.flags %}
+        <p class="notice-line lost-notice">🚨 紛失中です。個人情報が入っている可能性があるため、見つかるまで状況を確認してください。</p>
+        {% endif %}
+        {% if 'review' in device.flags %}
+        <p class="notice-line">❗ 借りている社員が{% if device.holder_missing %}社員マスタに見つかりません{% else %}退職しています{% endif %}。返却を確認してください。</p>
+        {% endif %}
+      </section>
+
+      {% include 'partials/_device_actions.html' %}
+      {% include 'partials/_loan_history.html' %}
+      {% include 'partials/_issue_history.html' %}
+      {% if loss_history %}{% include 'partials/_loss_history.html' %}{% endif %}
+
+      <section class="inventory-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>変更履歴</h2>
+            <p>この機器に対する操作の記録</p>
+          </div>
+        </div>
+        {{ event_list(event_history, false) }}
+      </section>
+
+      <datalist id="employee-codes">
+        {% for employee in employees %}
+        <option value="{{ employee.shain_code }}">{{ employee.name }}{% if employee.is_retired %}（退職済み）{% endif %}</option>
+        {% endfor %}
+      </datalist>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/employee-search.js') }}" defer></script>
+{% endblock %}

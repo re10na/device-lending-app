@@ -1,0 +1,61 @@
+{% from 'macros.html' import csrf_field, next_field with context %}
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>故障履歴</h2>
+            <p>報告された故障・不具合を新しい順に表示します。</p>
+          </div>
+          <span class="record-count">{{ issue_history|length }} 件</span>
+        </div>
+        {% if issue_history %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>内容</th><th>貸出</th><th>発生日</th><th>解決日 / 対処</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              {% for issue in issue_history %}
+              <tr>
+                <td class="wrap-cell">{{ issue.detail }}</td>
+                <td>{% if issue.blocks_loan %}貸出不可{% else %}貸出可{% endif %}</td>
+                <td>{{ issue.reported_on }}</td>
+                <td class="wrap-cell">
+                  {% if issue.resolved_on %}
+                  {{ issue.resolved_on }}<span class="secondary-value">{{ issue.resolution or '' }}</span>
+                  {% else %}
+                  <span class="status-pill {% if issue.blocks_loan %}flag-broken{% else %}flag-minor{% endif %}">未解決</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not issue.resolved_on %}
+                  <form class="inline-form" action="{{ url_for('issues.resolve', issue_id=issue.id) }}" method="post">
+                    {{ csrf_field() }}
+                    {{ next_field() }}
+                    <label class="sr-only" for="resolution-{{ issue.id }}">対処内容</label>
+                    <input id="resolution-{{ issue.id }}" name="resolution" maxlength="1000" placeholder="対処内容（任意）">
+                    <button class="small-button" type="submit">解決済みにする</button>
+                  </form>
+                  {% endif %}
+                  <details class="inline-edit">
+                    <summary>修正する</summary>
+                    <form class="edit-form" action="{{ url_for('issues.edit', issue_id=issue.id) }}" method="post">
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      <label>内容<textarea name="detail" maxlength="1000" required>{{ issue.detail }}</textarea></label>
+                      <label class="check-label"><input type="checkbox" name="blocks_loan"{% if issue.blocks_loan %} checked{% endif %}> 貸出不可</label>
+                      <label>発生日<input type="date" name="reported_on" value="{{ issue.reported_on }}" required></label>
+                      <label>解決日（空欄なら未解決）<input type="date" name="resolved_on" value="{{ issue.resolved_on or '' }}"></label>
+                      <label>対処内容<textarea name="resolution" maxlength="1000">{{ issue.resolution or '' }}</textarea></label>
+                      <button class="small-button" type="submit">修正を保存</button>
+                    </form>
+                  </details>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">故障・不具合の記録はありません。</p>
+        {% endif %}
+      </section>

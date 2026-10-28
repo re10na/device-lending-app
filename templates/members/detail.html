@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% macro device_cell(row) %}
+<a class="plain-link" href="{{ url_for('devices.detail', device_id=row.device_id) }}">{{ row.model_label }}</a>
+<span class="secondary-value">{{ row.identifier_summary }}</span>
+{%- endmacro %}
+
+{% block content %}
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">MEMBER DETAIL</p>
+          <h1>{{ employee.name }} <small class="sub-code">{{ employee.shain_code }}</small></h1>
+          <p class="page-description"><a class="clear-filter" href="{{ url_for('members.index') }}">← 人物一覧へ戻る</a></p>
+        </div>
+        <button class="updated-label" type="button" onclick="window.location.reload()"><span class="refresh-icon" aria-hidden="true">↻</span> ページを再読み込みして更新</button>
+      </section>
+
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>社員情報</h2>
+            <p>社員マスタの情報と注意マーク</p>
+          </div>
+          <div class="pill-group">
+            {% if employee.is_retired and current_loans %}<span class="status-pill flag-review">{{ FLAGS.review }}</span>{% endif %}
+            {% if loss_history|selectattr('found_on', 'none')|rejectattr('disposed_on')|list %}<span class="status-pill flag-lost">{{ FLAGS.lost }}</span>{% endif %}
+          </div>
+        </div>
+        <dl class="detail-list">
+          <div><dt>社員番号</dt><dd>{{ employee.shain_code }}</dd></div>
+          <div><dt>氏名</dt><dd>{{ employee.name }}</dd></div>
+          <div><dt>在籍</dt><dd>{% if employee.is_retired %}退職済み{% else %}在籍{% endif %}</dd></div>
+          <div><dt>退職日</dt><dd>{{ employee.taishoku_date or '—' }}</dd></div>
+          <div><dt>貸出台数</dt><dd>{{ current_loans|length }} 台</dd></div>
+        </dl>
+        {% if employee.is_retired and current_loans %}
+        <p class="notice-line">❗ 退職済みですが、まだ借りている機器があります。返却を確認してください。</p>
+        {% endif %}
+      </section>
+
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>今借りている機器</h2>
+            <p>返却や紛失の登録は、機器の詳細ページから行います。</p>
+          </div>
+          <span class="record-count">{{ current_loans|length }} 件</span>
+        </div>
+        {% if current_loans %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>機器</th><th>種別</th><th>貸出日</th><th>注意</th></tr>
+            </thead>
+            <tbody>
+              {% for loan in current_loans %}
+              <tr>
+                <td>{{ device_cell(loan) }}</td>
+                <td>{{ loan.device_type or '—' }}</td>
+                <td>{{ loan.loaned_on }}</td>
+                <td>{% if loan.is_lost %}<span class="status-pill flag-lost">{{ FLAGS.lost }}</span>{% else %}—{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">今借りている機器はありません。</p>
+        {% endif %}
+      </section>
+
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>過去の貸出履歴</h2>
+            <p>返却済みの貸出を新しい順に表示します。</p>
+          </div>
+          <span class="record-count">{{ past_loans|length }} 件</span>
+        </div>
+        {% if past_loans %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>機器</th><th>種別</th><th>貸出日</th><th>返却日</th></tr>
+            </thead>
+            <tbody>
+              {% for loan in past_loans %}
+              <tr>
+                <td>{{ device_cell(loan) }}</td>
+                <td>{{ loan.device_type or '—' }}</td>
+                <td>{{ loan.loaned_on }}</td>
+                <td>{{ loan.returned_on }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">返却済みの貸出はありません。</p>
+        {% endif %}
+      </section>
+
+      {# 申請の状態 -> 表示の色（利用者画面と同じ） #}
+      {% set status_pills = {'pending': 'loaned', 'confirmed': 'installed', 'done': 'available', 'rejected': 'flag-broken', 'cancelled': 'maintenance'} %}
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>申請の履歴</h2>
+            <p>新しい順に表示します。対応は「申請」の画面で行います。</p>
+          </div>
+          <span class="record-count">{{ requests|length }} 件</span>
+        </div>
+        {% if requests %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>申請日時</th><th>種類</th><th>機器 / 機種</th><th>内容</th><th>状態</th></tr>
+            </thead>
+            <tbody>
+              {% for req in requests %}
+              <tr>
+                <td>{{ req.requested_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ REQUEST_TYPES[req.request_type] }}</td>
+                <td>
+                  {% if req.device_id %}{{ device_cell(req) }}{% else %}{{ req.model_label }}{% endif %}
+                </td>
+                <td class="wrap-cell">{{ req.detail or '—' }}</td>
+                <td><span class="status-pill {{ status_pills[req.status] }}"><span></span>{{ REQUEST_STATUSES[req.status] }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">申請はありません。</p>
+        {% endif %}
+      </section>
+
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>紛失の履歴</h2>
+            <p>この人が借りている間に起きた紛失を新しい順に表示します。</p>
+          </div>
+          <span class="record-count">{{ loss_history|length }} 件</span>
+        </div>
+        {% if loss_history %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>紛失日</th><th>機器</th><th>報告</th><th>状況</th><th>解除日 / 理由</th></tr>
+            </thead>
+            <tbody>
+              {% for loss in loss_history %}
+              <tr>
+                <td>{{ loss.reported_on }}</td>
+                <td>{{ device_cell(loss) }}</td>
+                <td>{% if loss.reported_by == 'user' %}本人{% else %}管理者{% endif %}</td>
+                <td class="wrap-cell">{{ loss.detail or '—' }}</td>
+                <td class="wrap-cell">
+                  {% if loss.found_on %}
+                  {{ loss.found_on }}<span class="secondary-value">{{ loss.resolution or '' }}</span>
+                  {% else %}
+                  <span class="status-pill flag-lost">{% if loss.disposed_on %}見つからないまま廃棄{% else %}紛失中{% endif %}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">紛失の記録はありません。</p>
+        {% endif %}
+      </section>
+
+      <section class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>故障・不具合の履歴</h2>
+            <p>本人が申請したもの、または借りている間に報告されたものです（本人の過失かどうかは区別していません）。</p>
+          </div>
+          <span class="record-count">{{ issue_history|length }} 件</span>
+        </div>
+        {% if issue_history %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>発生日</th><th>機器</th><th>内容</th><th>結びつき</th><th>解決日 / 対処</th></tr>
+            </thead>
+            <tbody>
+              {% for issue in issue_history %}
+              <tr>
+                <td>{{ issue.reported_on }}</td>
+                <td>{{ device_cell(issue) }}</td>
+                <td class="wrap-cell">{{ issue.detail }}</td>
+                <td>
+                  {% if issue.by_request %}本人の申請{% endif %}
+                  {% if issue.during_loan %}<span{% if issue.by_request %} class="secondary-value"{% endif %}>貸出中に発生</span>{% endif %}
+                </td>
+                <td class="wrap-cell">
+                  {% if issue.resolved_on %}
+                  {{ issue.resolved_on }}<span class="secondary-value">{{ issue.resolution or '' }}</span>
+                  {% else %}
+                  <span class="status-pill {% if issue.blocks_loan %}flag-broken{% else %}flag-minor{% endif %}">未解決</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="notice-line">故障・不具合の記録はありません。</p>
+        {% endif %}
+      </section>
+{% endblock %}

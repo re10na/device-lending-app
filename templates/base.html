@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f8">
+  <script>document.documentElement.classList.add('js');</script>
+  <title>サンプル株式会社 | 機器貸出管理</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+  {# 画面ごとの CSS。共通の CSS より後に読み込むので、同じ詳しさのルールなら画面ごとの方が勝つ #}
+  {% block head %}{% endblock %}
+</head>
+<body{% block body_attrs %}{% endblock %}>
+  <div class="app-shell">
+    {% set on_home = request.endpoint == 'pages.home' %}
+    {% set on_user = request.endpoint == 'user.index' %}
+    {# サイドバー。ダッシュボードは円グラフの四隅から各ページへ行くので、このブロックを空にして出さない。
+       ログイン画面（pages.home）も出さない #}
+    {% block sidebar %}
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('pages.home') }}" aria-label="サンプル株式会社 自分の画面へ">
+        <span class="brand-icon" aria-hidden="true">
+          <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
+        </span>
+        <span class="brand-name">サンプル株式会社<span>機器管理システム</span></span>
+      </a>
+
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="side-nav" aria-label="メインメニュー">
+        {% if on_user %}
+        <a class="side-link active" href="{{ url_for('user.index') }}" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">⌂</span>
+          利用者画面
+        </a>
+        {% endif %}
+        {% if not on_home and not on_user %}
+        <a class="side-link{% if request.endpoint == 'pages.dashboard' %} active{% endif %}"
+          href="{{ url_for('pages.dashboard') }}" {% if request.endpoint=='pages.dashboard' %} aria-current="page" {%
+          endif %}>
+          <span class="nav-icon nav-icon-dashboard" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="13" height="10" rx="2"></rect>
+              <path d="M1.5 17h13M7.5 14v3m4-3v3M17 8h5m-2-2 2 2-2 2"></path>
+            </svg>
+          </span>
+          ダッシュボード
+        </a>
+        <a class="side-link{% if request.endpoint and request.endpoint.startswith('devices.') %} active{% endif %}"
+          href="{{ url_for('devices.index') }}" {% if request.endpoint and request.endpoint.startswith('devices.') %}
+          aria-current="page" {% endif %}>
+          <span class="nav-icon" aria-hidden="true">▣</span>
+          機器一覧
+        </a>
+        <a class="side-link{% if request.endpoint and request.endpoint.startswith('members.') %} active{% endif %}"
+          href="{{ url_for('members.index') }}" {% if request.endpoint and request.endpoint.startswith('members.') %}
+          aria-current="page" {% endif %}>
+          <span class="nav-icon" aria-hidden="true">☺</span>
+          人物一覧
+        </a>
+        <a class="side-link{% if request.endpoint and request.endpoint.startswith('sims.') %} active{% endif %}"
+          href="{{ url_for('sims.index') }}" {% if request.endpoint and request.endpoint.startswith('sims.') %}
+          aria-current="page" {% endif %}>
+          <span class="nav-icon" aria-hidden="true">▤</span>
+          SIM
+        </a>
+        <a class="side-link{% if request.endpoint and request.endpoint.startswith('requests.') %} active{% endif %}"
+          href="{{ url_for('requests.index') }}" {% if request.endpoint and request.endpoint.startswith('requests.') %}
+          aria-current="page" {% endif %}>
+          <span class="nav-icon" aria-hidden="true">✉</span>
+          申請
+          {% if pending_request_count %}
+          <span class="nav-badge" aria-label="未確認の申請 {{ pending_request_count }} 件">{{ pending_request_count if
+            pending_request_count < 100 else '99+' }}</span>
+              {% endif %}
+        </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="help-mark" aria-hidden="true">?</div>
+        <div>
+          <strong>サンプル株式会社</strong>
+          <span>機器管理システム</span>
+        </div>
+      </div>
+    </aside>
+    {% endblock %}
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumb"><a class="breadcrumb-home" href="{{ url_for('pages.home') }}">サンプル株式会社</a> <span>/</span> {% if on_home %}ログイン{% elif on_user %}利用者画面{% else %}管理者画面{%
+          endif %}</div>
+        <div class="topbar-tools">
+          <div class="theme-preview" role="group" aria-label="画面の色を試す">
+            <button class="theme-choice" type="button" data-theme-choice="auto" aria-pressed="true">自動</button>
+            <button class="theme-choice" type="button" data-theme-choice="morning" aria-pressed="false">朝</button>
+            <button class="theme-choice" type="button" data-theme-choice="day" aria-pressed="false">昼</button>
+            <button class="theme-choice" type="button" data-theme-choice="evening" aria-pressed="false">夕</button>
+          </div>
+          <div class="internal-label"><span></span> 社内管理用</div>
+          {# ログイン中の人と、ログアウト #}
+          {% if current_user %}
+          <form class="login-status" action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <span class="login-name">{% if current_user.role == 'admin' %}管理者{% else %}{{ current_user.name }}さん{% endif %}</span>
+            <button class="logout-button" type="submit">ログアウト</button>
+          </form>
+          {% endif %}
+        </div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <section class="flash-list" aria-live="polite">
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </section>
+      {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+
+      {# ダッシュボードは円グラフと四隅だけにするため、このブロックを空にしてフッターを出さない #}
+      {% block footer %}
+      <footer class="page-footer">
+        <span>サンプル株式会社</span>
+        <span>機器貸出管理</span>
+      </footer>
+      {% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/theme-preview.js') }}"></script>
+  {% block scripts %}{% endblock %}
+  </body>
+
+</html>

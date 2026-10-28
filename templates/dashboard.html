@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{# ダッシュボードはサイドバーを出さない（各ページへは円グラフの四隅のタイルから行く）。
+   画面選択へは、上の帯の「サンプル株式会社」から戻れる #}
+{% block body_attrs %} class="no-sidebar"{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+      {# ダッシュボードは円グラフと、その四隅のタイルを出す。
+         左の列に検索（_dashboard_search.html）、右の列に要確認・紛失中と最新の変更（_dashboard_side.html）。
+         見出し・「対応が必要なこと」は一旦出さない（_todo_card.html と、pages.py の処理は残してある） #}
+      <div class="dash-board">
+        {% include 'partials/_dashboard_search.html' %}
+        {% include 'partials/_status_card.html' %}
+        {% include 'partials/_dashboard_side.html' %}
+      </div>
+{% endblock %}
+
+{# 円グラフと四隅だけにするため、フッターも出さない #}
+{% block footer %}{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/status-chart.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/quick-search.js') }}" defer></script>
+{% endblock %}

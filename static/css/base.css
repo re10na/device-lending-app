@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+  --ink: #1e293b;
+  --muted: #778397;
+  --line: #e7ebf0;
+  --canvas: #f4f6f8;
+  --surface: #fff;
+  --blue: #16804e;
+  --green-soft: #edf7f1;
+  --green-line: #d6e9dc;
+
+  /* 機器の状態（配置）の色。ダッシュボードの円グラフ・機器一覧の状態のタイルで使う */
+  --placement-loaned: #e0a04a;
+  --placement-installed: #7f8fd6;
+  --placement-stored: #4fae7f;
+
+  /* 種別の色。どの画面でも同じ種別は同じ色（config.DEVICE_TYPE_ORDER の順）。
+     dataviz の検証スクリプトで、隣り合う色が色覚の違いがあっても見分けられることを確認済み。
+     背景とのコントラストは低めなので、色と一緒に必ず種別名を文字で出す */
+  --type-0: #a3abb6;  /* 順番にない種別・種別不明 */
+  --type-1: #2a78d6;  /* PC */
+  --type-2: #e87ba4;  /* SmartPhone */
+  --type-3: #6250d6;  /* MobileWifi */
+  --type-4: #eda100;  /* Phone */
+  --type-5: #1baf7a;  /* VoIP */
+}
+
+/* 時間帯テーマ。theme-preview.js が body[data-theme] を切り替える */
+body[data-theme="morning"] {
+  --ink: #29382f;
+  --muted: #68786d;
+  --line: #e1e8dd;
+  --canvas: #f1f5ed;
+  --surface: #fffefa;
+  --blue: #5e8969;
+  --green-soft: #e7f0e5;
+  --green-line: #d5e2d2;
+}
+
+body[data-theme="day"] {
+  --ink: #2e3937;
+  --muted: #6b7875;
+  --line: #e0e7e4;
+  --canvas: #f0f3f2;
+  --surface: #fbfdfc;
+  --blue: #5d8076;
+  --green-soft: #e7efeb;
+  --green-line: #d4e1da;
+}
+
+body[data-theme="evening"] {
+  --ink: #3a3932;
+  --muted: #797365;
+  --line: #e9e1d5;
+  --canvas: #f3eee5;
+  --surface: #fffaf2;
+  --blue: #827452;
+  --green-soft: #eeeadd;
+  --green-line: #e2dac8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "DM Sans", "Noto Sans JP", sans-serif;
+  font-size: 14px;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 7px;
+  font-size: 25px;
+  letter-spacing: -.04em;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}

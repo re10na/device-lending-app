@@ -1,0 +1,48 @@
+{# ダッシュボードの円グラフの左の列。社員・機器の検索と、Enter で検索したときの結果。
+   入力中の候補は quick-search.js が /admin/search から読んで出す（クラス名・id はそれに合わせる）。
+   1 件だけ見つかったときは pages.dashboard がそのページへ直接移動させる #}
+        <section class="dash-search side-panel" role="search" aria-labelledby="dash-search-title">
+          <div class="side-panel-head">
+            <h2 id="dash-search-title">検索</h2>
+            {% if query %}<a class="side-panel-link" href="{{ url_for('pages.dashboard') }}">解除</a>{% endif %}
+          </div>
+          <form class="quick-search-form" action="{{ url_for('pages.dashboard') }}" method="get" data-suggest-url="{{ url_for('pages.search_suggestions') }}">
+            <label class="visually-hidden" for="quick-search-input">社員・機器を検索</label>
+            <span class="quick-search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg>
+            </span>
+            <input id="quick-search-input" type="search" name="q" value="{{ query }}" maxlength="100" autocomplete="off"
+              placeholder="社員・機器を検索"
+              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="quick-search-suggestions">
+            <ul id="quick-search-suggestions" class="quick-search-suggestions" role="listbox" aria-label="検索の候補" hidden></ul>
+          </form>
+          <p class="quick-search-hint">社員番号・名前、機種、ホスト名・電話番号・管理番号など。Enter で一覧を出します。</p>
+
+          {% if query %}
+          <div class="search-results">
+            <p class="search-results-title">「{{ query }}」 人 {{ people|length }}・機器 {{ results|length }}</p>
+            {% if people or results %}
+            <ul class="search-result-list">
+              {% for person in people %}
+              <li>
+                <a class="search-result" href="{{ url_for('members.detail', shain_code=person.shain_code) }}">
+                  <span class="search-result-kind">人</span>
+                  <span class="search-result-text"><strong>{{ person.name }}</strong><span>{{ person.shain_code }} · {% if person.loan_count %}貸出 {{ person.loan_count }} 台{% else %}貸出なし{% endif %}{% if person.is_retired %} · 退職済み{% endif %}</span></span>
+                </a>
+              </li>
+              {% endfor %}
+              {% for device in results %}
+              <li>
+                <a class="search-result" href="{{ url_for('devices.detail', device_id=device.id) }}">
+                  <span class="search-result-kind is-device">機器</span>
+                  <span class="search-result-text"><strong>{{ device.display_name }}</strong><span>{{ device.model_label }} · {{ device.placement_label }}</span></span>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="side-panel-empty">見つかりませんでした</p>
+            {% endif %}
+          </div>
+          {% endif %}
+        </section>

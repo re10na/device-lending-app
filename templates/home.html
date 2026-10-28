@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import csrf_field %}
+
+{# 模擬ログインの画面。本物のログインは組み込み先のシステムが持つので、その代わりに使う（device_lending/auth.py）。
+   管理者（ID とパスワード）と利用者（社員番号）の入口。サイドバーは出さない #}
+{% block body_attrs %} class="no-sidebar"{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>ログイン</h1>
+          <p class="page-description">{% if mock_login %}管理者か利用者を選んでログインしてください（組み込み先のログインの代わりの、模擬ログインです）。{% else %}組み込み先のシステムからログインしてください。{% endif %}</p>
+        </div>
+      </section>
+
+      {% if mock_login %}
+      <section class="login-hub" aria-label="ログイン">
+        <div class="login-card admin-card">
+          <div class="login-copy">
+            <span class="role-card-kicker">ADMIN</span>
+            <h2>管理者</h2>
+            <p>機器の登録、貸出・返却、故障の記録</p>
+            <form class="login-form" action="{{ url_for('auth.login_admin') }}" method="post">
+              {{ csrf_field() }}
+              <label for="admin-username">ID</label>
+              <input id="admin-username" name="username" autocomplete="username" required>
+              <label for="admin-password">パスワード</label>
+              <input id="admin-password" type="password" name="password" autocomplete="current-password" required>
+              <button class="primary-button" type="submit">管理者としてログイン</button>
+            </form>
+          </div>
+          <img class="login-photo" src="{{ url_for('static', filename='images/admin-card.svg') }}" alt="">
+        </div>
+
+        <div class="login-card user-card">
+          <div class="login-copy">
+            <span class="role-card-kicker">USER</span>
+            <h2>利用者</h2>
+            <p>借りている機器の確認、借りたい機器・不具合の申請</p>
+            <form class="login-form" action="{{ url_for('auth.login_user') }}" method="post">
+              {{ csrf_field() }}
+              <label for="user-shain-code">社員番号</label>
+              <input id="user-shain-code" name="shain_code" maxlength="20" inputmode="numeric" autocomplete="username" placeholder="例: 1001" required>
+              <button class="primary-button" type="submit">利用者としてログイン</button>
+            </form>
+          </div>
+          <img class="login-photo" src="{{ url_for('static', filename='images/user-card.svg') }}" alt="">
+        </div>
+      </section>
+      {% endif %}
+{% endblock %}

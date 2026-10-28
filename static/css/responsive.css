@@ -1,0 +1,298 @@
+@media (max-width: 1050px) {
+  .main-content {
+    padding: 0 26px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 2列だとカードが狭くなり、イラストと文字が重なるため1列にする */
+  .role-hub {
+    grid-template-columns: 1fr;
+  }
+
+  .role-card {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 700px) {
+  /* 1 行に詰め込むと名前やボタンが 1 文字幅まで縮んで縦書きになるので、入らなければ 2 段にする */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 0;
+  }
+
+  .topbar-tools {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin-left: auto;
+  }
+
+  .breadcrumb,
+  .theme-choice,
+  .login-name,
+  .logout-button {
+    white-space: nowrap;
+  }
+
+  .internal-label {
+    display: none;
+  }
+
+  .role-hub {
+    grid-template-columns: 1fr;
+    gap: 11px;
+    margin-top: 0;
+  }
+
+  .role-card {
+    min-height: 280px;
+  }
+
+  .role-card-kicker,
+  .role-card-copy,
+  .role-card-count,
+  .role-card-note {
+    left: 22px;
+  }
+
+  .role-card-kicker {
+    top: 26px;
+  }
+
+  .role-card-copy {
+    top: 54px;
+  }
+
+  .role-card-copy strong {
+    font-size: 24px;
+  }
+
+  .role-card-copy > span {
+    font-size: 14px;
+  }
+
+  .role-card-count {
+    bottom: 24px;
+    font-size: 34px;
+  }
+
+  .role-card-note {
+    bottom: 26px;
+  }
+
+  .role-card-arrow {
+    right: 20px;
+    bottom: 20px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .role-card-photo {
+    top: 16%;
+    width: 45%;
+    height: 58%;
+  }
+
+  .role-card-copy {
+    max-width: 52%;
+  }
+
+  .sidebar {
+    position: static;
+    width: auto;
+    padding: 15px 18px 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand {
+    padding: 0 0 14px;
+  }
+
+  .sidebar-label,
+  .sidebar-bottom {
+    display: none;
+  }
+
+  .side-nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .side-link {
+    min-height: 35px;
+    padding: 0 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 0 18px;
+  }
+
+  .topbar {
+    min-height: 49px;
+  }
+
+  .page-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 26px;
+  }
+
+  .event-history-link {
+    white-space: normal;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .summary-grid {
+    gap: 9px;
+  }
+
+  .summary-card {
+    min-height: 118px;
+    padding: 14px;
+  }
+
+  .summary-value {
+    font-size: 24px;
+  }
+
+  .panel-heading {
+    min-height: 69px;
+    padding: 14px;
+  }
+
+  .inventory-filter {
+    flex-wrap: wrap;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  /* 狭い画面ではラベルを入力欄の上に置き、入力欄は横幅いっぱいにする */
+  .filter-field {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .inventory-filter label {
+    flex-basis: 100%;
+  }
+
+  .inventory-filter select,
+  .inventory-filter input {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .add-device-form {
+    align-items: stretch;
+    flex-direction: column;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .device-search-form {
+    align-items: stretch;
+    flex-direction: column;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .device-search-form label {
+    min-width: 0;
+  }
+
+  .add-device-form label {
+    min-width: 0;
+  }
+
+  .loan-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .loan-form select {
+    max-width: 150px;
+  }
+
+  /* 横並び用の flex: 1 1 140px が縦並びでは「高さ 140px」になるので、ここでは伸び縮みさせず横幅いっぱいにする */
+  .action-card .loan-form .employee-search,
+  .action-card .loan-form select {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+  }
+
+  .event-list li {
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .detail-list,
+  .action-grid {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .action-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .message-state {
+    padding: 25px 18px;
+  }
+
+  /* 狭い画面では表の 1 行をカードのように縦に並べ、各値の左に td の data-label を出す */
+  .stack-table thead {
+    display: none;
+  }
+
+  .stack-table,
+  .stack-table tbody,
+  .stack-table tr,
+  .stack-table td {
+    display: block;
+  }
+
+  .stack-table tr {
+    padding: 10px 14px;
+    border-top: 1px solid #edf0f3;
+  }
+
+  .stack-table td {
+    position: relative;
+    height: auto;
+    min-width: 0;
+    max-width: none;
+    padding: 4px 0 4px 6.5em;
+    border-top: 0;
+    white-space: normal;
+  }
+
+  .stack-table td::before {
+    position: absolute;
+    left: 0;
+    content: attr(data-label);
+    color: #8994a4;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* 中身のないセル（同じ機種の 2 行目以降の申請欄など）は詰める */
+  .stack-table td:empty {
+    display: none;
+  }
+}

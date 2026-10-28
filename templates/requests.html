@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import csrf_field, next_field with context %}
+
+{# 申請中・確認済みのカードで共通の、申請の中身（社員・機器・内容） #}
+{% macro request_summary(req, time_label, time) %}
+<h3><span class="request-type{% if req.request_type == 'issue' %} is-issue{% endif %}">{{ REQUEST_TYPES[req.request_type] }}</span>{{ req.employee_name or '社員マスタに無し' }}<span class="secondary-value">{{ req.shain_code }} · {{ time_label }} {{ time.strftime('%Y-%m-%d %H:%M') }}</span></h3>
+{% if req.employee_retired %}<p><span class="status-pill flag-review">退職済み</span></p>{% endif %}
+{% if req.request_type == 'issue' %}
+<p>
+  <a class="plain-link" href="{{ url_for('devices.detail', device_id=req.device_id) }}">{{ req.identifier_summary }}</a>
+  <span class="secondary-value">{{ req.model_label }}（{{ req.code }}）</span>
+</p>
+<p class="notice-line">{{ req.detail }}</p>
+{% else %}
+<p>{{ req.device_type }} / {{ req.model_label }}</p>
+{% if req.detail %}<p class="notice-line">理由: {{ req.detail }}</p>{% endif %}
+{% endif %}
+{% endmacro %}
+
+{% macro reject_form(req) %}
+<details class="inline-edit">
+  <summary>却下する</summary>
+  <form class="edit-form" action="{{ url_for('requests.reject', request_id=req.id) }}" method="post">
+    {{ csrf_field() }}
+    {{ next_field() }}
+    <p class="notice-line">却下したことは、必要に応じて外部ツールで利用者に伝えてください。</p>
+    <button class="small-button danger-button" type="submit">却下する</button>
+  </form>
+</details>
+{% endmacro %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+{% endblock %}
+
+{% block content %}
+      {# 文字を減らして、件数は色付きのタイルで見せる（機器一覧と同じ作り）。タイルを押すとその欄へ移動する #}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>申請</h1>
+          <p class="page-description">確認済みにしたら、外部ツールで受け渡しを調整して対応済みにします</p>
+        </div>
+      </section>
+
+      {% set request_tiles = [
+        ('pending', '申請中', pending|length, 'loaned'),
+        ('confirmed', '確認済み', confirmed|length, 'installed'),
+        ('processed', '処理済み', processed_total, 'stored'),
+      ] %}
+      <nav class="stat-tiles tiles-3" aria-label="申請の欄へ移動">
+        {% for key, label, value, color in request_tiles %}
+        <a class="stat-tile tile-{{ color }}" href="#{{ key }}">
+          <span class="stat-tile-label"><span class="stat-dot" aria-hidden="true"></span>{{ label }}</span>
+          <strong>{{ value }}<small>件</small></strong>
+        </a>
+        {% endfor %}
+      </nav>
+
+      <div class="request-sections">
+      <section id="pending" class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>申請中</h2>
+            <p>古い順。確認済みにするか、却下します</p>
+          </div>
+          <span class="record-count">{{ pending|length }} 件</span>
+        </div>
+        {% if pending %}
+        <div class="action-grid">
+          {% for req in pending %}
+          <div class="action-card request-card{% if req.request_type == 'issue' %} is-issue{% endif %}">
+            {{ request_summary(req, '申請', req.requested_at) }}
+            <form class="stack-form" action="{{ url_for('requests.confirm', request_id=req.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <button class="small-button" type="submit">確認済みにする</button>
+            </form>
+            {{ reject_form(req) }}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>申請中の申請はありません</strong>
+          <p>利用者が利用者画面から申請すると、ここに表示されます。</p>
+        </div>
+        {% endif %}
+      </section>
+
+      <section id="confirmed" class="inventory-panel action-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>確認済み</h2>
+            <p>利用者と調整中。機器を渡す・故障を記録するときに対応済みにします</p>
+          </div>
+          <span class="record-count">{{ confirmed|length }} 件</span>
+        </div>
+        {% if confirmed %}
+        <div class="action-grid">
+          {% for req in confirmed %}
+          <div class="action-card request-card{% if req.request_type == 'issue' %} is-issue{% endif %}">
+            {{ request_summary(req, '確認', req.confirmed_at) }}
+            {% if req.request_type == 'issue' %}
+            <form class="stack-form" action="{{ url_for('requests.approve_issue', request_id=req.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="check-label"><input type="checkbox" name="blocks_loan" checked> 貸出不可にする</label>
+              <button class="small-button" type="submit">故障・不具合として記録して対応済み</button>
+            </form>
+            {% else %}
+            {% set devices = candidates.get(req.device_model_id, []) %}
+            {% if devices %}
+            <form class="stack-form" action="{{ url_for('requests.approve_loan', request_id=req.id) }}" method="post">
+              {{ csrf_field() }}
+              {{ next_field() }}
+              <label class="sr-only" for="loan-device-{{ req.id }}">貸し出す機器</label>
+              <select id="loan-device-{{ req.id }}" name="device_id" required>
+                <option value="">貸し出す機器を選択</option>
+                {% for device in devices %}
+                <option value="{{ device.id }}">{{ device.identifier_summary }}（{{ device.code }}）{% if device.issue_details %} ⚠ {{ device.issue_details }}{% endif %}</option>
+                {% endfor %}
+              </select>
+              <button class="small-button" type="submit">貸し出して対応済み（今日）</button>
+            </form>
+            {% else %}
+            <p class="notice-line">この機種で今貸し出せる機器がありません。</p>
+            {% endif %}
+            {% endif %}
+            {{ reject_form(req) }}
+            <details class="inline-edit">
+              <summary>申請中に戻す</summary>
+              <form class="edit-form" action="{{ url_for('requests.reopen', request_id=req.id) }}" method="post">
+                {{ csrf_field() }}
+                {{ next_field() }}
+                <button class="small-button" type="submit">申請中に戻す</button>
+              </form>
+            </details>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="notice-line">確認済みの申請はありません。</p>
+        {% endif %}
+      </section>
+
+      <section id="processed" class="inventory-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>処理済み</h2>
+            <p>新しい順に最大{{ processed_preview }}件。誤って処理した申請は申請中に戻せます</p>
+          </div>
+          {% if processed_total > processed|length %}
+          <a class="small-button link-button event-history-link" href="{{ url_for('requests.processed') }}">すべて見る（{{ processed_total }} 件）</a>
+          {% else %}
+          <span class="record-count">{{ processed_total }} 件</span>
+          {% endif %}
+        </div>
+        {% if processed %}
+        {% include 'partials/_processed_requests.html' %}
+        {% else %}
+        <p class="notice-line">まだ処理済みの申請はありません。</p>
+        {% endif %}
+      </section>
+      </div>
+{% endblock %}

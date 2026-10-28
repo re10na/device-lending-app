@@ -1,0 +1,1169 @@
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 23px;
+}
+
+.summary-card {
+  min-height: 132px;
+  padding: 17px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 2px 5px rgba(24, 39, 75, .025);
+}
+
+.summary-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.summary-link:hover {
+  transform: translateY(-2px);
+  border-color: #a9d2b8;
+  box-shadow: 0 5px 14px rgba(24, 39, 75, .08);
+}
+
+.summary-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.summary-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #748094;
+  font-size: 14px;
+}
+
+.summary-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--green-soft);
+  color: var(--blue);
+}
+
+.summary-icon svg {
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.status-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+}
+
+.status-icon svg {
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.status-icon-loaned {
+  background: #fff3df;
+  color: #bf781c;
+}
+
+.status-icon-installed {
+  background: #eef0ff;
+  color: #6374c5;
+}
+
+.status-icon-stored {
+  background: #e9f7ef;
+  color: #27865a;
+}
+
+.status-icon-broken {
+  background: #fff0ed;
+  color: #cf5145;
+}
+
+.status-icon-review {
+  background: #f8eef2;
+  color: #a85d76;
+}
+
+.status-icon-minor {
+  background: #fff6e5;
+  color: #b8862b;
+}
+
+.status-icon-lost {
+  background: #fde8ea;
+  color: #b0303c;
+}
+
+.status-icon-disposed {
+  background: #f0f1f3;
+  color: #7a8291;
+}
+
+/* 機器詳細の見出しで、名称の横に状態マークを並べる */
+.device-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.status-icon-group {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.summary-value {
+  margin-top: 13px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -.06em;
+}
+
+.summary-value span {
+  margin-left: 5px;
+  color: #8792a2;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.summary-caption {
+  margin-top: 2px;
+  color: #9aa4b2;
+  font-size: 12px;
+}
+
+.flash-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.flash-message {
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.flash-message.success {
+  border-color: #c8ead7;
+  background: #f0faf4;
+  color: #176b42;
+}
+
+.flash-message.error {
+  border-color: #f0d5ca;
+  background: #fff8f5;
+  color: #9a482b;
+}
+
+.inventory-panel {
+  overflow: hidden;
+  border: 1px solid var(--green-line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 2px 5px rgba(24, 39, 75, .025);
+}
+
+/* パネルが続くときは間を空ける（margin は重なるので、action-panel などの margin-bottom とは二重にならない） */
+.inventory-panel + .inventory-panel {
+  margin-top: 18px;
+}
+
+.action-panel {
+  margin-bottom: 18px;
+}
+
+.search-panel {
+  margin-bottom: 18px;
+}
+
+.device-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 0 19px 18px;
+}
+
+.device-search-form label {
+  display: grid;
+  min-width: 200px;
+  gap: 6px;
+  color: #687589;
+  font-size: 13px;
+}
+
+.device-search-form input {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid #dce2e9;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.add-device-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 0 19px 18px;
+}
+
+.add-device-form .primary-button {
+  white-space: nowrap;
+}
+
+.add-device-form label,
+.add-device-form .model-field {
+  display: grid;
+  min-width: 180px;
+  gap: 6px;
+  color: #687589;
+  font-size: 13px;
+}
+
+.add-device-form input,
+.add-device-form select,
+.inline-form input,
+.inline-form select,
+.stack-form input[type='text'],
+.stack-form select,
+.stack-form input:not([type]),
+.stack-form textarea,
+.edit-form input,
+.edit-form select,
+.edit-form textarea,
+.loan-form select,
+.loan-form input {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid #dce2e9;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.primary-button {
+  min-height: 34px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.small-button {
+  min-height: 29px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 表の行に置く、ボタンの見た目のリンク */
+.row-action-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.small-button.return-button {
+  border: 1px solid #dce2e9;
+  background: var(--surface);
+  color: #516075;
+}
+
+.loan-form {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 利用者画面の「社員を選択」。パネルの枠に付かないよう余白を取る */
+.search-panel > .loan-form {
+  padding: 0 19px 18px;
+}
+
+.loan-form .employee-search {
+  width: 190px;
+}
+
+.loan-form select {
+  max-width: 240px;
+}
+
+.loan-form input[type="date"] {
+  width: 130px;
+}
+
+.no-users {
+  color: #8994a4;
+  font-size: 13px;
+}
+
+.comment-form {
+  display: grid;
+  min-width: 180px;
+  gap: 6px;
+}
+
+.comment-form textarea {
+  min-height: 64px;
+  padding: 7px 9px;
+  border: 1px solid #dce2e9;
+  border-radius: 6px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.comment-form .small-button {
+  justify-self: start;
+}
+
+.panel-heading {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 19px;
+}
+
+.panel-heading h2 {
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+
+.panel-heading p {
+  margin: 0;
+  color: #929dad;
+  font-size: 13px;
+}
+
+.record-count {
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #f2f4f7;
+  color: #687589;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.inventory-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 0 19px 16px;
+  color: #687589;
+  font-size: 13px;
+}
+
+.inventory-filter select,
+.inventory-filter input {
+  min-height: 34px;
+  min-width: 155px;
+  padding: 0 9px;
+  border: 1px solid #dce2e9;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.inventory-filter input {
+  min-width: 260px;
+}
+
+/* ラベルと入力欄を 1 組にして、折り返すときに離れないようにする */
+.filter-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* JS が動くときは自動で絞り込むのでボタンは使わない */
+.js .filter-button,
+.js .no-js-only {
+  display: none;
+}
+
+.filter-button {
+  min-height: 34px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.clear-filter {
+  color: #5166c8;
+  text-decoration: none;
+}
+
+.clear-filter:hover {
+  text-decoration: underline;
+}
+
+.message-state {
+  display: flex;
+  min-height: 235px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 35px;
+  text-align: left;
+}
+
+.empty-state {
+  flex-direction: column;
+  gap: 0;
+  text-align: center;
+}
+
+.empty-illustration {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 13px;
+  place-items: center;
+  border-radius: 14px;
+  background: #f0f2ff;
+  color: #7184ed;
+  font-size: 22px;
+}
+
+.message-state strong {
+  font-size: 14px;
+}
+
+.message-state p {
+  max-width: 440px;
+  margin: 7px 0 0;
+  color: #8994a4;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.state-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff2e8;
+  color: #be6e29;
+  font-weight: 700;
+}
+
+.error-state {
+  background: #fffdfa;
+}
+
+.plain-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.plain-link:hover {
+  text-decoration: underline;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.danger-button {
+  background: #b9404b;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* 「古い記録」だけのときも右側に寄せる */
+.pagination-next {
+  margin-left: auto;
+}
+
+.sim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 画面中央に開くダイアログ（dialogs.js が開閉する） */
+.modal {
+  width: min(460px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 20px 50px rgba(24, 39, 75, .18);
+  white-space: normal;
+}
+
+.modal::backdrop {
+  background: rgba(20, 28, 40, .35);
+}
+
+.modal-body {
+  display: grid;
+  /* 中身（長い選択肢のプルダウンなど）がダイアログの幅を押し広げないようにする */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px 24px;
+}
+
+.modal h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.modal-field {
+  display: grid;
+  gap: 6px;
+  color: #687589;
+  font-size: 13px;
+}
+
+.modal input,
+.modal select {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dce2e9;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+  padding: 0 19px 18px;
+}
+
+.detail-list dt {
+  margin-bottom: 4px;
+  color: #929dad;
+  font-size: 12px;
+}
+
+.detail-list dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 表の下の「すべて見る」 */
+.table-more {
+  margin: 0;
+  padding: 12px 19px;
+  border-top: 1px solid #edf0f3;
+  font-size: 13px;
+}
+
+.table-more a {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.notice-line {
+  margin: 0;
+  padding: 0 19px 16px;
+  color: #8a5a1c;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.action-card .notice-line {
+  padding: 0 0 8px;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  padding: 0 19px 19px;
+}
+
+.action-card {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 8px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+/* カード幅に収まるよう、貸出フォームは折り返して横幅いっぱいに使う */
+.action-card .loan-form {
+  flex-wrap: wrap;
+}
+
+.action-card .loan-form .employee-search,
+.action-card .loan-form select {
+  flex: 1 1 140px;
+  width: auto;
+  max-width: none;
+}
+
+.action-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.action-card p {
+  margin: 0;
+  color: #687589;
+  font-size: 13px;
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 操作カードの中の入力欄は、カードの残りの幅いっぱいに広げる（例の文が欄の中で切れないように）。
+   狭いときはボタンが下の行に回る */
+.action-card .inline-form input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.stack-form,
+.edit-form {
+  display: grid;
+  gap: 8px;
+}
+
+/* 列の幅を中身に合わせない。長い機種名を選ぶ・長い文を入れると、カードからはみ出して伸びるため */
+.stack-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.stack-form select,
+.stack-form textarea {
+  width: 100%;
+}
+
+.stack-form textarea,
+.edit-form textarea {
+  min-height: 58px;
+  padding: 7px 9px;
+  resize: vertical;
+}
+
+.edit-form label {
+  display: grid;
+  gap: 4px;
+  color: #687589;
+  font-size: 12px;
+}
+
+.edit-form .small-button,
+.stack-form .small-button {
+  justify-self: start;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #516075;
+  font-size: 13px;
+}
+
+.inline-edit {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.inline-edit summary {
+  color: #5166c8;
+  cursor: pointer;
+}
+
+.inline-edit .edit-form {
+  min-width: 240px;
+  padding: 10px 0;
+}
+
+.event-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event-history-link {
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.event-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 19px;
+  border-top: 1px solid #edf0f3;
+  color: #4b586b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* 変更履歴の種類の印（貸出・故障・紛失・SIM・機器）。色だけに頼らないよう種類名を書く */
+.event-kind {
+  --kind-color: var(--blue);
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--kind-color) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kind-color) 10%, var(--surface));
+  color: color-mix(in srgb, var(--kind-color) 80%, #1e293b);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  vertical-align: 1px;
+}
+
+.event-loan .event-kind { --kind-color: var(--placement-loaned); }
+.event-issue .event-kind { --kind-color: #cf5145; }
+.event-lost .event-kind { --kind-color: #b0303c; }
+.event-sim .event-kind { --kind-color: var(--type-3); }
+.event-device .event-kind { --kind-color: var(--type-1); }
+
+.event-time {
+  flex: 0 0 auto;
+  color: #929dad;
+  font-size: 12px;
+}
+
+.identifier-field {
+  display: grid;
+  gap: 6px;
+  color: #687589;
+  font-size: 13px;
+}
+
+.identifier-field[hidden],
+.identifier-hint[hidden] {
+  display: none;
+}
+
+/* JS が動くときは identifier-fields.js の準備が終わるまで隠す（一瞬表示されてから消えるのを防ぐ） */
+.js #register-form:not(.is-ready) .identifier-field,
+.js #register-form:not(.is-ready) .identifier-hint {
+  display: none;
+}
+
+.identifier-hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: #687589;
+  font-size: 13px;
+}
+
+.sub-code {
+  display: block;
+  margin-top: 2px;
+  color: #929dad;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+h1 .sub-code {
+  display: inline;
+  margin-left: 6px;
+  font-size: 14px;
+}
+
+/* 画面選択（トップページ）のカード。配色はロゴの赤と青に合わせている */
+.role-hub {
+  display: grid;
+  max-width: 1320px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin: 22px auto 36px;
+}
+
+.role-card {
+  position: relative;
+  display: block;
+  min-height: 460px;
+  overflow: hidden;
+  border-radius: 26px;
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(41, 55, 47, .07);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.admin-card {
+  background: radial-gradient(circle at 78% 55%, rgba(224, 91, 83, .12), transparent 37%), linear-gradient(135deg, #fcf3f0, #f5e8e5);
+  --role-accent: #9f514b;
+}
+
+.user-card {
+  background: radial-gradient(circle at 78% 55%, rgba(54, 147, 187, .13), transparent 37%), linear-gradient(135deg, #f0f6f7, #e5eff2);
+  --role-accent: #3e758c;
+}
+
+a.role-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 17px 36px rgba(41, 55, 47, .12);
+}
+
+a.role-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+.role-card.is-disabled {
+  opacity: .62;
+  cursor: not-allowed;
+}
+
+.role-card-photo {
+  position: absolute;
+  top: 10%;
+  right: 0;
+  width: 70%;
+  height: 74%;
+  object-fit: contain;
+  object-position: right 16px top 50%;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.role-card-kicker,
+.role-card-copy,
+.role-card-count,
+.role-card-note,
+.role-card-arrow {
+  z-index: 1;
+}
+
+.role-card-kicker {
+  position: absolute;
+  top: 40px;
+  left: 44px;
+  color: var(--role-accent);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.role-card-copy {
+  position: absolute;
+  top: 76px;
+  left: 44px;
+  display: grid;
+  max-width: 48%;
+  gap: 12px;
+}
+
+.role-card-copy strong {
+  font-size: 34px;
+  letter-spacing: .02em;
+}
+
+.role-card-copy > span {
+  color: #65736d;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.role-card-count {
+  position: absolute;
+  left: 44px;
+  bottom: 38px;
+  font-size: 46px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -.03em;
+}
+
+.role-card-count small {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.role-card-note {
+  position: absolute;
+  left: 44px;
+  bottom: 40px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .6);
+  color: var(--role-accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.role-card-arrow {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(30, 55, 67, .08);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .52);
+  color: var(--role-accent);
+  font-size: 24px;
+  transition: transform .18s ease, background .18s ease;
+}
+
+a.role-card:hover .role-card-arrow {
+  transform: translateX(3px);
+  background: rgba(255, 255, 255, .85);
+}
+
+/* ログイン画面。画面選択のカードと同じ配色（管理者は赤系、利用者は青系）で、カードの中に入力欄を置く */
+.login-hub {
+  display: grid;
+  max-width: 1200px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin: 8px auto 36px;
+}
+
+.login-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 420px;
+  overflow: hidden;
+  padding: 36px 32px 36px 40px;
+  border-radius: 26px;
+  box-shadow: 0 12px 28px rgba(41, 55, 47, .07);
+}
+
+.login-copy {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.login-copy .role-card-kicker {
+  position: static;
+}
+
+.login-copy h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.login-copy > p {
+  margin: 0 0 6px;
+  color: #65736d;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.login-form {
+  display: grid;
+  gap: 6px;
+  max-width: 300px;
+}
+
+.login-form label {
+  margin-top: 6px;
+  color: #65736d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-form input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(30, 55, 67, .15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .85);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.login-form input:focus {
+  border-color: var(--role-accent);
+  outline: 2px solid color-mix(in srgb, var(--role-accent) 25%, transparent);
+}
+
+.login-form .primary-button {
+  min-height: 44px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: var(--role-accent);
+  font-size: 14px;
+}
+
+.login-photo {
+  flex: 0 1 38%;
+  width: 38%;
+  max-height: 300px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+@media (max-width: 1050px) {
+  .login-hub {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .login-card {
+    min-height: 0;
+    padding: 24px 20px;
+  }
+
+  .login-photo {
+    display: none;
+  }
+
+  .login-form {
+    max-width: none;
+  }
+}
+
+/* ダッシュボードの「紛失中」カード。行をまたいで横長にし、紛失があるときは赤で目立たせる */
+.summary-wide {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.summary-wide-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.summary-wide-body .summary-value {
+  margin-top: 6px;
+}
+
+.summary-wide-body .summary-caption {
+  margin-top: 0;
+}
+
+.summary-alert .summary-caption {
+  color: #a44e5a;
+}
+
+.summary-alert {
+  border-color: #f0b7bd;
+  background: #fff6f7;
+}
+
+.summary-alert .summary-value,
+.summary-alert .summary-top {
+  color: #b0303c;
+}
+
+.summary-alert:hover {
+  border-color: #e28c96;
+}
+
+/* 機器詳細の紛失カード・注意文 */
+.action-card.lost-card {
+  border-color: #f0b7bd;
+  background: #fff6f7;
+}
+
+.notice-line.lost-notice {
+  color: #b0303c;
+  font-weight: 600;
+}

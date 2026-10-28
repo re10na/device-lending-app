@@ -1,0 +1,23 @@
+{% from 'macros.html' import event_list %}
+      {# JS が動くときは events-drawer.js が右から出し入れするパネルにする。動かないときはページの末尾にそのまま出る #}
+      <aside id="events-drawer" class="inventory-panel events-drawer" aria-labelledby="events-drawer-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="events-drawer-title">最新の変更</h2>
+            <p>直近 {{ recent_events|length }} 件の機器の動き</p>
+          </div>
+          <div class="heading-actions">
+            <a class="small-button link-button event-history-link" href="{{ url_for('pages.event_history') }}">すべて見る</a>
+            <button class="drawer-close" type="button" data-drawer-close aria-label="最新の変更を閉じる">×</button>
+          </div>
+        </div>
+        {% if recent_events %}
+        {{ event_list(recent_events, true) }}
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>まだ変更履歴はありません</strong>
+          <p>機器を登録すると、ここに最新の動きが表示されます。</p>
+        </div>
+        {% endif %}
+      </aside>

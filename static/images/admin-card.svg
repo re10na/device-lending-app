@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300">
+  <!-- 台帳（クリップボード） -->
+  <rect x="40" y="40" width="130" height="180" rx="12" fill="#fbefec" stroke="#a0544b" stroke-width="5"/>
+  <rect x="78" y="28" width="54" height="24" rx="6" fill="#a0544b"/>
+  <g stroke-linecap="round" stroke-width="6">
+    <path d="M62 88l8 8 14-16" stroke="#a0544b" fill="none"/>
+    <path d="M96 90h52" stroke="#d9b5ae"/>
+    <path d="M62 128l8 8 14-16" stroke="#a0544b" fill="none"/>
+    <path d="M96 130h52" stroke="#d9b5ae"/>
+    <path d="M96 170h52" stroke="#d9b5ae"/>
+  </g>
+  <rect x="62" y="158" width="22" height="22" rx="4" fill="none" stroke="#e0a04a" stroke-width="5"/>
+  <!-- ノート PC -->
+  <rect x="120" y="190" width="90" height="58" rx="6" fill="#fff" stroke="#7a5a52" stroke-width="5"/>
+  <rect x="131" y="201" width="68" height="36" rx="3" fill="#efe3df"/>
+  <path d="M108 258h114" stroke="#7a5a52" stroke-width="7" stroke-linecap="round"/>
+</svg>

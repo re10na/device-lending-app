@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import status_icon %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+{% endblock %}
+
+{% block content %}
+      {# 文字を減らして、在籍と注意は色と人数で見せる（機器一覧と同じ作り） #}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>人物一覧</h1>
+          <p class="page-description">社員マスタの {{ total }} 人</p>
+        </div>
+      </section>
+
+      {# 在籍のタイルと注意の札。JS が動かなくてもリンクで絞り込める。
+         JS が動くときは list-tiles.js がクリックを受けて、下の form の select を切り替える #}
+      {% set args = request.args.to_dict() %}
+      {% set status_tiles = [
+        ('', 'すべて', total, 'all'),
+        ('active', '在籍', counts.active, 'stored'),
+        ('retired', '退職済み', counts.retired, 'disposed'),
+      ] %}
+      <nav class="stat-tiles tiles-3" aria-label="在籍で絞り込む">
+        {% for key, label, value, color in status_tiles %}
+        <a class="stat-tile tile-{{ color }}" data-select="status-filter" data-value="{{ key }}"
+          href="{{ url_for('members.index', **dict(args, status=key)) }}"{% if selected_status == key %} aria-current="true"{% endif %}>
+          <span class="stat-tile-label"><span class="stat-dot" aria-hidden="true"></span>{{ label }}</span>
+          <strong>{{ value }}<small>人</small></strong>
+        </a>
+        {% endfor %}
+      </nav>
+
+      {% set flag_chips = [
+        ('', '指定なし', none, none, ''),
+        ('review', '要確認', counts.review, 'review', 'review'),
+        ('lost', '紛失中', counts.lost, 'lost', 'lost'),
+        ('ever_lost', '紛失したことがある', counts.ever_lost, none, ''),
+        ('ever_issue', '故障・不具合があった', counts.ever_issue, none, ''),
+      ] %}
+      <nav class="filter-chips" aria-label="注意で絞り込む">
+        {% for key, label, value, icon, color in flag_chips %}
+        <a class="filter-chip{% if color %} chip-{{ color }}{% endif %}" data-select="flag-filter" data-value="{{ key }}"
+          href="{{ url_for('members.index', **dict(args, flag=key)) }}"{% if selected_flag == key %} aria-current="true"{% endif %}>
+          {% if icon %}{{ status_icon(icon) }}{% endif %}
+          {{ label }}{% if value is not none %}<span class="chip-count">{{ value }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      </nav>
+
+      <section class="inventory-panel list-panel">
+        <form class="inventory-filter list-filter" id="member-filter" action="{{ url_for('members.index') }}" method="get">
+          {# 在籍・注意は上のタイルと札で選ぶ。JS が動かないときだけ select を出す #}
+          <span class="filter-field no-js-only">
+            <label for="status-filter">在籍</label>
+            <select id="status-filter" name="status">
+              <option value="">すべて</option>
+              {% for key, label in statuses.items() %}
+              <option value="{{ key }}"{% if selected_status == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </span>
+          <span class="filter-field no-js-only">
+            <label for="flag-filter">注意</label>
+            <select id="flag-filter" name="flag">
+              <option value="">指定なし</option>
+              {% for key, label in flags.items() %}
+              <option value="{{ key }}"{% if selected_flag == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </span>
+
+          <span class="list-search">
+            <label class="sr-only" for="keyword-filter">キーワード</label>
+            <svg class="list-search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg>
+            <input id="keyword-filter" type="search" name="q" value="{{ keyword }}" maxlength="100" placeholder="社員番号・氏名">
+          </span>
+          <span class="filter-field">
+            <label class="sr-only" for="loans-filter">貸出</label>
+            <select id="loans-filter" name="loans">
+              <option value="">貸出：すべて</option>
+              {% for key, label in loan_states.items() %}
+              <option value="{{ key }}"{% if selected_loans == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </span>
+          <button class="filter-button" type="submit">絞り込む</button>
+          <a id="clear-filter" class="clear-filter" href="{{ url_for('members.index') }}"{% if not filtered %} hidden{% endif %}>解除</a>
+
+          <span class="list-tools">
+            <span id="member-count" class="record-count">{{ members|length }}{% if filtered %} / {{ total }}{% endif %} 人</span>
+            <a id="export-csv" class="small-button return-button link-button" href="{{ url_for('members.export_csv', **request.args) }}" data-base="{{ url_for('members.export_csv') }}">CSV</a>
+          </span>
+        </form>
+
+        {# 絞り込みを変えたときは member-filter.js がこの中身と件数だけを差し替える #}
+        <div id="member-results">
+        {% include 'partials/_member_table.html' %}
+        </div>
+      </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/list-tiles.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/member-filter.js') }}" defer></script>
+{% endblock %}

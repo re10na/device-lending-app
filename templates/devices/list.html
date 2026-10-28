@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import status_icon %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+{% endblock %}
+
+{% block content %}
+      {# 文字を減らして、状態と注意は色と台数で見せる（ダッシュボードと同じ考え方） #}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>機器一覧</h1>
+          <p class="page-description">{{ total }} 台の機器</p>
+        </div>
+        <div class="heading-actions">
+          <button class="primary-button add-button" type="button" data-open-dialog="register-dialog"><span aria-hidden="true">＋</span> 機器を登録</button>
+        </div>
+      </section>
+
+      {% include 'partials/_register_panel.html' %}
+
+      {# 状態のタイルと注意の札。JS が動かなくてもリンクで絞り込める。
+         JS が動くときは list-tiles.js がクリックを受けて、下の form の select を切り替える #}
+      {% set args = request.args.to_dict() %}
+      {% set placement_tiles = [
+        ('all', 'すべて', total),
+        ('loaned', '貸出中', counts.loaned),
+        ('installed', '設置中', counts.installed),
+        ('stored', '保管中', counts.stored),
+        ('disposed', '廃棄済み', counts.disposed),
+      ] %}
+      <nav class="stat-tiles" aria-label="状態で絞り込む">
+        {% for key, label, value in placement_tiles %}
+        <a class="stat-tile tile-{{ key }}" data-select="placement-filter" data-value="{{ key }}"
+          href="{{ url_for('devices.index', **dict(args, placement=key)) }}"{% if selected_placement == key %} aria-current="true"{% endif %}>
+          <span class="stat-tile-label"><span class="stat-dot" aria-hidden="true"></span>{{ label }}</span>
+          <strong>{{ value }}<small>台</small></strong>
+        </a>
+        {% endfor %}
+      </nav>
+
+      {% set flag_chips = [
+        ('', '指定なし', none, none),
+        ('any', '注意あり', counts.any, none),
+        ('broken', '故障', counts.broken, 'broken'),
+        ('minor', '不具合あり', counts.minor, 'minor'),
+        ('review', '要確認', counts.review, 'review'),
+        ('lost', '紛失中', counts.lost, 'lost'),
+      ] %}
+      <nav class="filter-chips" aria-label="注意で絞り込む">
+        {% for key, label, value, icon in flag_chips %}
+        <a class="filter-chip{% if key and key != 'any' %} chip-{{ key }}{% endif %}" data-select="flag-filter" data-value="{{ key }}"
+          href="{{ url_for('devices.index', **dict(args, flag=key)) }}"{% if selected_flag == key %} aria-current="true"{% endif %}>
+          {% if icon %}{{ status_icon(icon) }}{% endif %}
+          {{ label }}{% if value is not none %}<span class="chip-count">{{ value }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      </nav>
+
+      <section class="inventory-panel list-panel">
+        <form class="inventory-filter list-filter" action="{{ url_for('devices.index') }}" method="get">
+          {# 状態・注意は上のタイルと札で選ぶ。JS が動かないときだけ select を出す #}
+          <span class="filter-field no-js-only">
+            <label for="placement-filter">状態</label>
+            <select id="placement-filter" name="placement">
+              <option value="all"{% if selected_placement == 'all' %} selected{% endif %}>すべて</option>
+              {% for key, label in PLACEMENTS.items() %}
+              <option value="{{ key }}"{% if selected_placement == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </span>
+          <span class="filter-field no-js-only">
+            <label for="flag-filter">注意</label>
+            <select id="flag-filter" name="flag">
+              <option value="">指定なし</option>
+              {% for key in FILTER_FLAG_GROUPS %}
+              <option value="{{ key }}"{% if selected_flag == key %} selected{% endif %}>{{ FLAG_GROUPS[key][0] }}</option>
+              {% endfor %}
+              {% for key, label in FLAGS.items() %}
+              <option value="{{ key }}"{% if selected_flag == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+              {# リンクからの絞り込み（選択肢には出さない）を選んだ状態で表示できるように #}
+              {% if selected_flag and selected_flag not in FLAGS and selected_flag not in FILTER_FLAG_GROUPS %}
+              <option value="{{ selected_flag }}" selected>{{ FLAG_GROUPS[selected_flag][0] }}</option>
+              {% endif %}
+            </select>
+          </span>
+
+          <span class="list-search">
+            <label class="sr-only" for="keyword-filter">キーワード</label>
+            <svg class="list-search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg>
+            <input id="keyword-filter" type="search" name="q" value="{{ keyword }}" maxlength="100" placeholder="ホスト名・電話番号・機種・社員名など">
+          </span>
+          <span class="filter-field">
+            <label class="sr-only" for="type-filter">種別</label>
+            <select id="type-filter" name="type">
+              <option value="">種別：すべて</option>
+              {% for device_type in filter_types %}
+              <option value="{{ device_type }}"{% if selected_type == device_type %} selected{% endif %}>{{ device_type }}</option>
+              {% endfor %}
+            </select>
+          </span>
+          <span class="filter-field">
+            <label class="sr-only" for="holder-filter">借りている人</label>
+            <select id="holder-filter" name="holder">
+              <option value="">借りている人：すべて</option>
+              {% for holder in holders %}
+              <option value="{{ holder.shain_code }}" data-flags="{{ holder.flags|sort|join(' ') }}" data-types="{{ holder.types|sort|join('|') }}"{% if selected_holder == holder.shain_code %} selected{% endif %}>{{ holder.name or '社員マスタに無し' }}（{{ holder.shain_code }}）{% if holder.retired %} 退職済み{% endif %}</option>
+              {% endfor %}
+            </select>
+          </span>
+          <button class="filter-button" type="submit">絞り込む</button>
+          <a id="clear-filter" class="clear-filter" href="{{ url_for('devices.index') }}"{% if not filtered %} hidden{% endif %}>解除</a>
+
+          <span class="list-tools">
+            <span id="device-count" class="record-count">{{ devices|length }}{% if filtered and selected_placement == 'all' %} / {{ total }}{% endif %} 件</span>
+            <a id="export-csv" class="small-button return-button link-button" href="{{ url_for('devices.export_csv', **request.args) }}" data-base="{{ url_for('devices.export_csv') }}">CSV</a>
+          </span>
+        </form>
+
+        {% if not devices and not filtered %}
+        {% set empty_hint = '右上の「機器を登録」から機器を追加すると、貸出登録ができます。' %}
+        {% else %}
+        {% set empty_hint = '絞り込みの条件を変えるか、解除してください。' %}
+        {% endif %}
+        {# 絞り込みを変えたときは device-filter.js がこの中身と件数だけを差し替える #}
+        <div id="device-results">
+        {% include 'partials/_device_table.html' %}
+        </div>
+      </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/dialogs.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/identifier-fields.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/list-tiles.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/device-filter.js') }}" defer></script>
+{% endblock %}

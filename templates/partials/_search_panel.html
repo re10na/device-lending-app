@@ -1,0 +1,15 @@
+      {# 入力中の候補は quick-search.js が /admin/search から読んで出す。JS が無くても Enter で検索できる #}
+      <section class="quick-search" role="search">
+        <form class="quick-search-form" action="{{ url_for('pages.dashboard') }}" method="get" data-suggest-url="{{ url_for('pages.search_suggestions') }}">
+          <label class="visually-hidden" for="quick-search-input">社員・機器を検索</label>
+          <span class="quick-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg>
+          </span>
+          <input id="quick-search-input" type="search" name="q" value="{{ query }}" maxlength="100" autocomplete="off"
+            placeholder="社員番号・名前、機種・メーカー・種別、ホスト名・電話番号・管理番号など"
+            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="quick-search-suggestions">
+          <button class="primary-button" type="submit">検索</button>
+          <ul id="quick-search-suggestions" class="quick-search-suggestions" role="listbox" aria-label="検索の候補" hidden></ul>
+        </form>
+        <p class="quick-search-hint">候補を選ぶと、その人・機器のページに移動します。Enter で検索結果の一覧を表示します。</p>
+      </section>

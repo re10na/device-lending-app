@@ -1,0 +1,55 @@
+{# 対応が必要なこと。急ぐものから順に 1 行ずつ並べ、0 件の行は灰色で控えめにする #}
+{% set todos = [
+  ('lost', '紛失中', counts.lost, '台', '個人情報が入っている機器もあります', url_for('devices.index', flag='lost')),
+  ('broken', '故障・不具合', counts.issue, '台', 'うち貸出不可 ' ~ counts.broken ~ ' 台', url_for('devices.index', flag='issue')),
+  ('review', '要確認', counts.review, '台', '退職者・不明な社員が借りたまま', url_for('devices.index', flag='review')),
+  ('pending', '申請中', pending_count, '件', '確認して受け渡しを調整する', url_for('requests.index')),
+  ('confirmed', '受け渡し待ち', confirmed_count, '件', '確認済みの申請', url_for('requests.index')),
+  ('retiring', 'もうすぐ退職する人', retirements|length, '人', '退職日が ' ~ retirement_notice_days ~ ' 日以内で、まだ借りている', none),
+] %}
+{% set active_count = todos|selectattr(2)|list|length %}
+        <section class="dash-card todo-card" aria-labelledby="todo-title">
+          <div class="dash-card-head">
+            <div>
+              <h2 id="todo-title">対応が必要なこと</h2>
+              <p>{% if active_count %}{{ active_count }} 項目に対応が必要です{% else %}今は対応が必要なことはありません{% endif %}</p>
+            </div>
+          </div>
+
+          <ul class="todo-list">
+            {% for key, label, value, unit, caption, href in todos %}
+            <li class="todo-item todo-{{ key }}{% if value %} is-active{% endif %}">
+              {% if href %}<a class="todo-row" href="{{ href }}">{% else %}<div class="todo-row">{% endif %}
+                <span class="todo-dot" aria-hidden="true"></span>
+                <span class="todo-text">
+                  <span class="todo-label">{{ label }}</span>
+                  <span class="todo-caption">{{ caption }}</span>
+                </span>
+                <span class="todo-count">{{ value }}<small>{{ unit }}</small></span>
+                {# 移動先のない行も、数字の位置をそろえるため矢印の場所を空けておく #}
+                <span class="todo-arrow" aria-hidden="true">{% if href %}→{% endif %}</span>
+              {% if href %}</a>{% else %}</div>{% endif %}
+
+              {% if key == 'pending' and waiting_requests %}
+              <ul class="todo-sub">
+                {% for req in waiting_requests %}
+                <li>
+                  <span class="todo-sub-main"><strong>{{ req.employee_name or req.shain_code }}</strong><span>{{ REQUEST_TYPES[req.request_type] }} · {{ req.model_label }}</span></span>
+                  <span class="todo-sub-note{% if req.waiting_days >= 3 %} is-late{% endif %}">{% if req.waiting_days %}{{ req.waiting_days }} 日待ち{% else %}今日{% endif %}</span>
+                </li>
+                {% endfor %}
+              </ul>
+              {% elif key == 'retiring' and retirements %}
+              <ul class="todo-sub">
+                {% for person in retirements %}
+                <li>
+                  <a class="todo-sub-main" href="{{ url_for('members.detail', shain_code=person.shain_code) }}"><strong>{{ person.name }}</strong><span>退職日 {{ person.taishoku_date }} · 貸出 {{ person.loan_count }} 台</span></a>
+                  <span class="todo-sub-note{% if person.days_left <= 7 %} is-late{% endif %}">あと {{ person.days_left }} 日</span>
+                </li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </section>

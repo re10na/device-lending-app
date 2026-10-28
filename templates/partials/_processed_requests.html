@@ -1,0 +1,40 @@
+{# 処理済みの申請の表（申請の画面と「処理済みの申請」ページで共通）。processed を渡す #}
+{% from 'macros.html' import csrf_field, next_field with context %}
+{% set status_pills = {'done': 'available', 'rejected': 'flag-broken', 'cancelled': 'maintenance'} %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>終了日時</th><th>社員</th><th>種類</th><th>機器 / 機種</th><th>内容</th><th>状態</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              {% for req in processed %}
+              <tr>
+                <td>{{ req.closed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ req.employee_name or '社員マスタに無し' }}<span class="secondary-value">{{ req.shain_code }}</span></td>
+                <td><span class="request-type{% if req.request_type == 'issue' %} is-issue{% endif %}">{{ REQUEST_TYPES[req.request_type] }}</span></td>
+                <td>
+                  {{ req.model_label }}
+                  {% if req.device_id %}<span class="secondary-value"><a class="plain-link" href="{{ url_for('devices.detail', device_id=req.device_id) }}">{{ req.identifier_summary }}</a></span>{% endif %}
+                </td>
+                <td class="wrap-cell">{{ req.detail or '—' }}</td>
+                <td><span class="status-pill {{ status_pills[req.status] }}"><span></span>{{ REQUEST_STATUSES[req.status] }}</span></td>
+                <td>
+                  {% if req.status == 'rejected' or req.loan_id or req.issue_id %}
+                  <details class="inline-edit">
+                    <summary>申請中に戻す</summary>
+                    <form class="edit-form" action="{{ url_for('requests.reopen', request_id=req.id) }}" method="post">
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      {% if req.loan_id %}<p class="notice-line">作った貸出記録を取り消します。</p>
+                      {% elif req.issue_id %}<p class="notice-line">作った故障・不具合の記録を取り消します。</p>
+                      {% endif %}
+                      <button class="small-button danger-button" type="submit">申請中に戻す</button>
+                    </form>
+                  </details>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>

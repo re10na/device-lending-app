@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300">
+  <!-- 人物 -->
+  <circle cx="110" cy="92" r="34" fill="#e6f0f4" stroke="#3f7690" stroke-width="5"/>
+  <path d="M46 236c0-48 28-84 64-84s64 36 64 84" fill="#e6f0f4" stroke="#3f7690" stroke-width="5" stroke-linejoin="round"/>
+  <!-- 借りているノート PC -->
+  <rect x="78" y="186" width="96" height="62" rx="6" fill="#fff" stroke="#2f5f78" stroke-width="5"/>
+  <rect x="90" y="198" width="72" height="38" rx="3" fill="#d6e6ee"/>
+  <path d="M64 258h124" stroke="#2f5f78" stroke-width="7" stroke-linecap="round"/>
+  <!-- 申請の吹き出し -->
+  <rect x="150" y="40" width="70" height="46" rx="12" fill="#fff" stroke="#c8913f" stroke-width="5"/>
+  <path d="M164 86l-8 16 22-16" fill="#fff" stroke="#c8913f" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M166 63h38" stroke="#c8913f" stroke-width="6" stroke-linecap="round"/>
+</svg>

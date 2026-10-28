@@ -1,0 +1,40 @@
+        {% if members %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr>
+                <th>社員</th>
+                <th>貸出</th>
+                <th>注意</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for member in members %}
+              <tr>
+                <td data-label="社員">
+                  {# 名前の頭文字の丸いアイコン。在籍は緑、退職済みは灰色 #}
+                  <span class="device-cell">
+                    <span class="avatar{% if member.is_retired %} is-retired{% endif %}" aria-hidden="true">{{ (member.name or '?')[:1] }}</span>
+                    <span>
+                      <a class="plain-link member-name" href="{{ url_for('members.detail', shain_code=member.shain_code) }}">{{ member.name }}</a>
+                      <small class="sub-code">{{ member.shain_code }}{% if member.is_retired %} · 退職済み（{{ member.taishoku_date }}）{% endif %}</small>
+                    </span>
+                  </span>
+                </td>
+                <td data-label="貸出">{% if member.loan_count %}<a class="loan-count" href="{{ url_for('devices.index', holder=member.shain_code) }}">{{ member.loan_count }}<small>台</small></a>{% else %}<span class="loan-count is-zero">0<small>台</small></span>{% endif %}</td>
+                <td data-label="注意">{% for mark in member.marks %}<span class="status-pill flag-{{ mark }}">{{ FLAGS[mark] }}</span>
+                {% else %}—{% endfor %}</td>
+                <td data-label="操作"><a class="small-button return-button link-button" href="{{ url_for('members.detail', shain_code=member.shain_code) }}">詳細 <span aria-hidden="true">→</span></a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">☺</span>
+          <strong>条件に合う人はいません</strong>
+          <p>絞り込みの条件を変えるか、絞り込みを解除してください。</p>
+        </div>
+        {% endif %}

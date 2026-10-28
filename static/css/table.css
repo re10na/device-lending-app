@@ -1,0 +1,114 @@
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead {
+  background: #f8f9fb;
+}
+
+th {
+  height: 39px;
+  padding: 0 17px;
+  color: #8994a4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+td {
+  height: 54px;
+  padding: 0 17px;
+  border-top: 1px solid #edf0f3;
+  color: #4b586b;
+  font-size: 13px;
+}
+
+.asset-tag {
+  color: #12623d;
+  font-weight: 600;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.status-pill span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-pill.available {
+  background: #eaf7f0;
+  color: #16804e;
+}
+
+.status-pill.loaned {
+  background: #fff5e7;
+  color: #b87413;
+}
+
+.status-pill.maintenance {
+  background: #eef0f3;
+  color: #647084;
+}
+
+.status-pill.installed {
+  background: var(--green-soft);
+  color: #12623d;
+}
+
+.status-pill.stored {
+  background: #eaf7f0;
+  color: #16804e;
+}
+
+.status-pill.review,
+.status-pill.disposed,
+.status-pill.flag-review {
+  background: #fff0f1;
+  color: #a44e5a;
+}
+
+.status-pill.flag-broken {
+  background: #fde8ea;
+  color: #b0303c;
+}
+
+.status-pill.flag-lost {
+  background: #b0303c;
+  color: #fff;
+}
+
+.status-pill.flag-minor {
+  background: #fff5e7;
+  color: #b87413;
+}
+
+.wrap-cell {
+  /* 狭い画面で 1 文字幅まで縮んで縦書きのようになるのを防ぐ */
+  min-width: 160px;
+  max-width: 280px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  white-space: normal;
+}
+
+.secondary-value {
+  display: block;
+  margin-top: 3px;
+  color: #929dad;
+  font-size: 12px;
+}

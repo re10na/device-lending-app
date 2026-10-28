@@ -1,0 +1,69 @@
+/* 利用者画面だけの見た目（user.html が body に .user-page を付ける）。
+   色は時間帯テーマの変数から作るので、朝・昼・夕の切り替えにも合わせて変わる */
+
+.user-page {
+  /* 背景を少しテーマ色に寄せて、白いパネルとの差を出す */
+  background: color-mix(in srgb, var(--green-soft) 65%, var(--canvas));
+}
+
+.user-page .inventory-panel {
+  box-shadow: 0 3px 10px rgba(24, 39, 75, .05);
+}
+
+/* 見出しの左に短い色の線を付ける。
+   見出し全体に色を付けると、すぐ下の色付きの表の見出し行とつながって 1 つの塊に見えるため */
+.user-page .panel-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: color-mix(in srgb, var(--blue) 45%, var(--ink));
+}
+
+.user-page .panel-heading h2::before {
+  width: 4px;
+  height: 1em;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  background: var(--blue);
+  content: "";
+}
+
+/* 線の分だけ、説明文も右にそろえる */
+.user-page .panel-heading p {
+  padding-left: 12px;
+}
+
+.user-page thead {
+  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
+}
+
+/* 要約カード: 上の線とうっすらした背景で、種類ごとに色を分ける */
+.user-page .summary-card {
+  border-top-width: 3px;
+}
+
+.user-page .summary-card.tone-loaned {
+  border-top-color: #e3a64f;
+  background: linear-gradient(180deg, #fff8ec, var(--surface) 70%);
+}
+
+.user-page .summary-card.tone-pending {
+  border-top-color: #c98aa0;
+  background: linear-gradient(180deg, #fbf1f5, var(--surface) 70%);
+}
+
+.user-page .summary-card.tone-confirmed {
+  border-top-color: #8e9be0;
+  background: linear-gradient(180deg, #f2f3ff, var(--surface) 70%);
+}
+
+/* カードは 2 枚なので、空いた 3 列目を作らずに横幅いっぱいに広げる */
+.user-page .action-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* 申請フォームのカードも白一色にしない */
+.user-page .action-card {
+  border-color: var(--green-line);
+  background: color-mix(in srgb, var(--green-soft) 35%, var(--surface));
+}

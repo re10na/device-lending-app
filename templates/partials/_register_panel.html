@@ -1,0 +1,34 @@
+{% from 'macros.html' import csrf_field, next_field, model_options, identifier_inputs with context %}
+      {# 機器の登録。機器一覧の右上の「＋ 機器を登録」で開くダイアログ（dialogs.js が開閉する）。
+         機種を選ぶと、その種別で使う照合情報の欄だけが出る（identifier-fields.js） #}
+      <dialog id="register-dialog" class="modal register-modal" aria-labelledby="register-title">
+        <form id="register-form" class="modal-body" action="{{ url_for('devices.register') }}" method="post">
+          {{ csrf_field() }}
+          {{ next_field() }}
+          <h3 id="register-title">機器を登録</h3>
+          <p class="modal-sub">管理番号（D-xxxx）は自動で付きます。</p>
+          {# select を label の中に入れると、開いたプルダウンがすぐ閉じるブラウザがあるため分ける #}
+          <div class="modal-field">
+            <label for="register-model">機種</label>
+            <select id="register-model" name="device_model_id" required>
+              <option value="">機種を選択</option>
+              {{ model_options(models) }}
+            </select>
+          </div>
+          <p class="identifier-hint" data-identifier-hint hidden>照合情報を 1 つ以上入力してください（シリアル番号だけ、スマホなどは SIM を差すだけでも可）。</p>
+          {{ identifier_inputs() }}
+          <div class="identifier-field modal-field" data-field="sim_id" data-types="{{ SIM_DEVICE_TYPES|join(' ') }}">
+            <label for="register-sim">差す SIM（任意）</label>
+            <select id="register-sim" name="sim_id">
+              <option value="">差さない</option>
+              {% for sim in free_sims %}
+              <option value="{{ sim.id }}">{{ sim.label }}{% if sim.extension %}（内線 {{ sim.extension }}）{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button class="small-button return-button" type="button" data-close-dialog>キャンセル</button>
+            <button class="small-button" type="submit">登録する</button>
+          </div>
+        </form>
+      </dialog>

@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import csrf_field, next_field, event_list with context %}
+
+{# SIM の番号の入力欄。sim を渡すと今の値を入れる（変更フォーム用） #}
+{% macro sim_inputs(sim=none) %}
+{% for field, (label, max_length, example) in SIM_FIELDS.items() %}
+<label class="identifier-field">
+  {{ label }}
+  <input name="{{ field }}" maxlength="{{ max_length + (8 if field in ('iccid', 'phone_number') else 0) }}" value="{% if sim %}{{ sim.phone_display if field == 'phone_number' else (sim[field] or '') }}{% endif %}" placeholder="{{ example }}" autocomplete="off">
+</label>
+{% endfor %}
+{% endmacro %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+{% endblock %}
+
+{% block content %}
+      {# 文字を減らして、使用中・未使用は色と枚数で見せる（機器一覧と同じ作り） #}
+      <section class="page-heading list-heading">
+        <div>
+          <h1>SIM</h1>
+          <p class="page-description">差し替えると外線・内線も一緒に移ります</p>
+        </div>
+        <div class="heading-actions">
+          <button class="primary-button add-button" type="button" data-open-dialog="register-sim-dialog"><span aria-hidden="true">＋</span> SIM を登録</button>
+        </div>
+      </section>
+
+      {# SIM の登録。右上の「＋ SIM を登録」で開くダイアログ #}
+      <dialog id="register-sim-dialog" class="modal" aria-labelledby="register-sim-title">
+        <form class="modal-body" action="{{ url_for('sims.register') }}" method="post">
+          {{ csrf_field() }}
+          {{ next_field() }}
+          <h3 id="register-sim-title">SIM を登録</h3>
+          <p class="modal-sub">SIM番号（ICCID）か外線のどちらかは必須です。登録したら、一覧の「機器に差す」から機器に割り当てます。</p>
+          {{ sim_inputs() }}
+          <div class="modal-actions">
+            <button class="small-button return-button" type="button" data-close-dialog>キャンセル</button>
+            <button class="small-button" type="submit">登録する</button>
+          </div>
+        </form>
+      </dialog>
+
+      {# 使用中・未使用のタイル（押すとその SIM だけを出す） #}
+      {% set state_tiles = [
+        ('', 'すべて', counts.all, 'all'),
+        ('used', '使用中', counts.used, 'loaned'),
+        ('free', '未使用', counts.free, 'stored'),
+      ] %}
+      <nav class="stat-tiles tiles-3" aria-label="使用中・未使用で絞り込む">
+        {% for key, label, value, color in state_tiles %}
+        <a class="stat-tile tile-{{ color }}" href="{{ url_for('sims.index', state=key or None) }}"{% if selected_state == key %} aria-current="true"{% endif %}>
+          <span class="stat-tile-label"><span class="stat-dot" aria-hidden="true"></span>{{ label }}</span>
+          <strong>{{ value }}<small>枚</small></strong>
+        </a>
+        {% endfor %}
+      </nav>
+
+      <section class="inventory-panel list-panel">
+        {% if sims %}
+        <div class="table-wrap">
+          <table class="stack-table">
+            <thead>
+              <tr><th>外線 / SIM番号</th><th>内線</th><th>差している機器</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              {% for sim in sims %}
+              <tr>
+                <td data-label="SIM">
+                  {# SIM の丸いアイコン。使用中は橙、未使用は緑（上のタイルと同じ色） #}
+                  <span class="device-cell">
+                    <span class="sim-badge{% if sim.device_id %} is-used{% endif %}" aria-hidden="true">SIM</span>
+                    <span>
+                      <strong class="sim-number">{{ sim.phone_display or '外線なし' }}</strong>
+                      <small class="sub-code">{{ sim.iccid or 'SIM番号なし' }}</small>
+                    </span>
+                  </span>
+                </td>
+                <td data-label="内線">{{ sim.extension or '—' }}</td>
+                <td data-label="機器">
+                  {% if sim.device_id %}
+                  <a class="plain-link" href="{{ url_for('devices.detail', device_id=sim.device_id) }}">{{ sim.device_name }}</a>
+                  <span class="secondary-value">{{ sim.device_model_label }}{% if sim.hostname %}（{{ sim.device_code }}）{% endif %}</span>
+                  {% else %}
+                  <span class="status-pill stored"><span></span>未使用</span>
+                  {% endif %}
+                </td>
+                <td data-label="操作">
+                  {# td に flex を付けると表の行の高さが崩れるので、中の div で並べる #}
+                  <div class="sim-actions">
+                    <button class="small-button" type="button" data-open-dialog="attach-dialog-{{ sim.id }}">機器に差す</button>
+                    <button class="small-button return-button" type="button" data-open-dialog="edit-dialog-{{ sim.id }}">番号を変更</button>
+                    {% if sim.device_id %}
+                    <form action="{{ url_for('sims.detach', sim_id=sim.id) }}" method="post">
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      <button class="small-button return-button" type="submit">外す</button>
+                    </form>
+                    {% endif %}
+                  </div>
+
+                  <dialog id="attach-dialog-{{ sim.id }}" class="modal" aria-labelledby="attach-title-{{ sim.id }}">
+                    <form class="modal-body" action="{{ url_for('sims.attach') }}" method="post">
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      <input type="hidden" name="sim_id" value="{{ sim.id }}">
+                      <h3 id="attach-title-{{ sim.id }}">機器に差す</h3>
+                      <p class="modal-sub">SIM（{{ sim.label }}）を差す機器を選んでください。外線・内線も一緒に移ります。</p>
+                      <div class="modal-field">
+                        <label for="attach-device-{{ sim.id }}">差す機器</label>
+                        <select id="attach-device-{{ sim.id }}" name="device_id" required>
+                          <option value="">機器を選択</option>
+                          {% set candidates = sim_devices|rejectattr('id', 'equalto', sim.device_id)|list %}
+                          {% set empty_devices = candidates|rejectattr('sim_id')|list %}
+                          {% set occupied_devices = candidates|selectattr('sim_id')|list %}
+                          {% if empty_devices %}
+                          <optgroup label="SIM を差していない機器">
+                            {% for device in empty_devices %}
+                            <option value="{{ device.id }}">{{ device.code }} {{ device.model_label }}{% if device.hostname or device.serial_number %}（{{ device.hostname or device.serial_number }}）{% endif %}</option>
+                            {% endfor %}
+                          </optgroup>
+                          {% endif %}
+                          {% if occupied_devices %}
+                          <optgroup label="SIM を差している機器（元の SIM は外れます）">
+                            {% for device in occupied_devices %}
+                            <option value="{{ device.id }}">{{ device.code }} {{ device.model_label }}（{{ device.sim_label }}）</option>
+                            {% endfor %}
+                          </optgroup>
+                          {% endif %}
+                        </select>
+                      </div>
+                      <div class="modal-actions">
+                        <button class="small-button return-button" type="button" data-close-dialog>キャンセル</button>
+                        <button class="small-button" type="submit">差す</button>
+                      </div>
+                    </form>
+                  </dialog>
+
+                  <dialog id="edit-dialog-{{ sim.id }}" class="modal" aria-labelledby="edit-title-{{ sim.id }}">
+                    <form class="modal-body" action="{{ url_for('sims.edit', sim_id=sim.id) }}" method="post">
+                      {{ csrf_field() }}
+                      {{ next_field() }}
+                      <h3 id="edit-title-{{ sim.id }}">番号を変更</h3>
+                      <p class="modal-sub">SIM番号（ICCID）か外線のどちらかは必須です。</p>
+                      {{ sim_inputs(sim) }}
+                      <div class="modal-actions">
+                        <button class="small-button return-button" type="button" data-close-dialog>キャンセル</button>
+                        <button class="small-button" type="submit">変更する</button>
+                      </div>
+                    </form>
+                  </dialog>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>{% if selected_state %}該当する SIM はありません{% else %}SIM はありません{% endif %}</strong>
+          <p>{% if selected_state %}上の「すべて」を押すと全部の SIM を出します。{% else %}右上の「SIM を登録」から追加してください。{% endif %}</p>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="inventory-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>SIM の最新の変更</h2>
+          </div>
+          <a class="small-button link-button event-history-link" href="{{ url_for('sims.event_history') }}">すべて見る</a>
+        </div>
+        {% if sim_events %}
+        {{ event_list(sim_events, true) }}
+        {% else %}
+        <div class="message-state empty-state">
+          <span class="empty-illustration" aria-hidden="true">▣</span>
+          <strong>まだ変更履歴はありません</strong>
+          <p>SIM を登録すると、ここに最新の動きが表示されます。</p>
+        </div>
+        {% endif %}
+      </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/dialogs.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{# 機器の状況。登録台数の内訳（円グラフ）と、その四隅に管理者画面の各ページへのタイル #}
+{% set placements = [
+  ('loaned', '貸出中', counts.loaned),
+  ('installed', '設置中', counts.installed),
+  ('stored', '保管中', counts.stored),
+] %}
+        <section class="dash-card status-card" aria-label="機器の状況">
+          {# 円グラフ（ドーナツ型）。弧の位置と丸の位置は charts.donut_layout で計算している。
+             区分を押すと、その外側に種別の数だけ同じ大きさの丸が、四隅のタイルより手前に飛び出す（status-chart.js）。
+             丸を押すと、その状態と種別で絞り込んだ機器一覧を開く。中央の数字を押すと、
+             選んでいる区分（選んでいなければ全部）の一覧を開く #}
+          <div class="placement-chart" data-total="{{ counts.total }}">
+            <div class="donut-stage">
+              {# 円グラフの四角い枠の四隅に、管理者画面の各ページへのタイルを置く（サイドバーの代わり）。
+                 円に向いた角を大きく丸めて、輪に沿わせる #}
+              <nav class="corner-nav" aria-label="管理者画面のページ">
+                <a class="corner-tile corner-tl" href="{{ url_for('devices.index') }}">
+                  <span class="corner-icon" aria-hidden="true">▣</span>
+                  <span class="corner-text"><strong>機器一覧</strong><span>{{ counts.total }} 台</span></span>
+                </a>
+                <a class="corner-tile corner-tr" href="{{ url_for('sims.index') }}">
+                  <span class="corner-icon" aria-hidden="true">▤</span>
+                  <span class="corner-text"><strong>SIM</strong><span>{{ corner_counts.sims }} 枚{% if corner_counts.free_sims %}（未使用 {{ corner_counts.free_sims }}）{% endif %}</span></span>
+                </a>
+                <a class="corner-tile corner-bl" href="{{ url_for('members.index') }}">
+                  <span class="corner-icon" aria-hidden="true">☺</span>
+                  <span class="corner-text"><strong>社員</strong><span>在籍 {{ corner_counts.employees }} 人</span></span>
+                </a>
+                <a class="corner-tile corner-br" href="{{ url_for('requests.index') }}">
+                  <span class="corner-icon" aria-hidden="true">✉</span>
+                  <span class="corner-text"><strong>申請{% if pending_count %}<span class="nav-badge corner-badge" aria-label="未確認の申請 {{ pending_count }} 件">{{ pending_count if pending_count < 100 else '99+' }}</span>{% endif %}</strong><span>{% if pending_count %}申請中 {{ pending_count }} 件{% else %}申請中はありません{% endif %}</span></span>
+                </a>
+              </nav>
+
+              <div class="donut">
+                {# 丸が輪の外にはみ出すぶん、viewBox を広めにとる（中心は 50, 50） #}
+                <svg viewBox="-12 -12 124 124" aria-labelledby="donut-title">
+                  <title id="donut-title">内訳：{% for key, label, value in placements %}{{ label }} {{ value }}台{% if not loop.last %}、{% endif %}{% endfor %}</title>
+                  {# 四隅のタイルをくり抜いた範囲（dashboard.css の --tile-cut = 枠の幅の 34.5% = 半径 42.8）のクリックを受け止める透明な円。
+                     タイルのくり抜きは見た目だけで、クリックは下のタイルに届いてしまうため（輪のすき間など） #}
+                  <circle class="donut-blocker" cx="50" cy="50" r="42.8"></circle>
+                  {# 機器が 1 台もないときだけ灰色の輪を出す（あるときに出すと、境目のすき間から透けて見える） #}
+                  {% if not donut %}<circle class="donut-track" cx="50" cy="50" r="30" pathLength="100" transform="rotate(-90 50 50)"></circle>{% endif %}
+                  {# 区分ごとに「輪の弧 → その種別の丸」の順に並べる（Tab で区分の次にその丸へ移れるように）。
+                     data-label / data-value / data-href は、選んだときに中央の数字と行き先を切り替えるのに使う #}
+                  {% for segment in donut %}
+                  {# 輪だけを 90 度回して、12 時の位置から時計回りに描く（丸の文字は回さない） #}
+                  <g class="segment-link" data-placement="{{ segment.key }}" data-label="{{ PLACEMENTS[segment.key] }}" data-value="{{ segment.value }}"
+                    data-href="{{ url_for('devices.index', placement=segment.key) }}"
+                    role="button" tabindex="0" transform="rotate(-90 50 50)"
+                    aria-label="{{ PLACEMENTS[segment.key] }} {{ segment.value }}台。押すと種別の内訳を出します" aria-expanded="false">
+                    <circle class="donut-segment segment-{{ segment.key }}" cx="50" cy="50" r="30" pathLength="100"
+                      stroke-dasharray="{{ segment.length }} {{ 100 - segment.length }}" stroke-dashoffset="{{ -segment.offset }}"></circle>
+                    {# 見た目の線より太い、透明な当たり判定 #}
+                    <circle class="donut-hit" cx="50" cy="50" r="30" pathLength="100"
+                      stroke-dasharray="{{ segment.length }} {{ 100 - segment.length }}" stroke-dashoffset="{{ -segment.offset }}"></circle>
+                  </g>
+
+                  {# 種別の丸。ふだんは輪の上で小さく隠れていて、区分を押すと外側へ飛び出す #}
+                  <g class="donut-bubbles" data-placement="{{ segment.key }}">
+                    {% for bubble in segment.bubbles %}
+                    <a class="bubble-link" href="{{ url_for('devices.index', placement=segment.key, type=bubble.device_type) if bubble.device_type else url_for('devices.index', placement=segment.key) }}" tabindex="-1"
+                      aria-label="{{ PLACEMENTS[segment.key] }}の{{ bubble.device_type or '種別不明' }} {{ bubble.count }}台の一覧を開く">
+                      <g class="bubble type-{{ bubble.slot }}"
+                        style="--x: {{ bubble.x }}px; --y: {{ bubble.y }}px; --sx: {{ bubble.start_x }}px; --sy: {{ bubble.start_y }}px; --i: {{ bubble.index }}">
+                        <circle class="bubble-circle" r="10"></circle>
+                        <text class="bubble-name" y="-1.6">{{ bubble.short_name }}</text>
+                        <text class="bubble-count" y="5.4">{{ bubble.count }}</text>
+                      </g>
+                    </a>
+                    {% endfor %}
+                  </g>
+                  {% endfor %}
+
+                  {# 輪の中に、区分の名前と台数を直接書く。小さな区分は文字が収まらないので書かない（label_x が None） #}
+                  <g class="segment-labels" aria-hidden="true">
+                    {% for segment in donut if segment.label_x is not none %}
+                    <text class="segment-label" data-placement="{{ segment.key }}" x="{{ segment.label_x }}" y="{{ segment.label_y }}">
+                      <tspan class="segment-label-name" x="{{ segment.label_x }}" dy="-1.4">{{ PLACEMENTS[segment.key] }}</tspan>
+                      <tspan class="segment-label-value" x="{{ segment.label_x }}" dy="6.2">{{ segment.value }}<tspan class="segment-label-unit">台</tspan></tspan>
+                    </text>
+                    {% endfor %}
+                  </g>
+                </svg>
+                <a class="donut-center" href="{{ url_for('devices.index') }}" data-default-href="{{ url_for('devices.index') }}">
+                  <span class="donut-center-label" data-default="{% if donut %}合計{% else %}まだ機器がありません{% endif %}"></span>
+                  <span><strong data-default="{{ counts.total }}">{{ counts.total }}</strong><small>台</small></span>
+                </a>
+
+              </div>
+            </div>
+          </div>
+        </section>

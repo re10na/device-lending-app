@@ -1,0 +1,36 @@
+{% from 'macros.html' import event_list %}
+{# ダッシュボードの円グラフの右の列。上に要確認と紛失中（アイコンと台数だけ）、下に最新の変更 #}
+        <aside class="dash-side" aria-label="注意と最新の変更">
+          <div class="alert-tiles">
+            <a class="alert-tile{% if counts.review %} is-alert{% endif %}" href="{{ url_for('devices.index', flag='review') }}"
+              title="退職者・社員マスタに無い社員が借りたままの機器">
+              <span class="alert-mark" aria-hidden="true">!</span>
+              <span class="alert-text"><span>要確認</span><strong>{{ counts.review }}<small>台</small></strong></span>
+            </a>
+            <a class="alert-tile{% if counts.lost %} is-alert{% endif %}" href="{{ url_for('devices.index', flag='lost') }}"
+              title="紛失中の機器（個人情報が入っている機器もあります）">
+              <span class="alert-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect x="7" y="2.5" width="10" height="16" rx="2"></rect>
+                  <path d="M12 7v4m0 3h.01"></path>
+                  <path d="M4 21.5h16"></path>
+                </svg>
+              </span>
+              <span class="alert-text"><span>紛失中</span><strong>{{ counts.lost }}<small>台</small></strong></span>
+            </a>
+          </div>
+
+          <section class="side-panel events-panel" aria-labelledby="events-title">
+            <div class="side-panel-head">
+              <h2 id="events-title">最新の変更</h2>
+              <a class="side-panel-link" href="{{ url_for('pages.event_history') }}">すべて見る <span aria-hidden="true">→</span></a>
+            </div>
+            {% if recent_events %}
+            <div class="side-panel-scroll">
+              {{ event_list(recent_events, true) }}
+            </div>
+            {% else %}
+            <p class="side-panel-empty">まだ変更履歴はありません</p>
+            {% endif %}
+          </section>
+        </aside>
